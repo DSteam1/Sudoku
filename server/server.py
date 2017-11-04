@@ -1,11 +1,10 @@
-#! /usr/bin/env python
 from socket import socket, AF_INET, SOCK_STREAM
-from utils import *
+
 from clienthandler import *
 
 
 class Server:
-    sock = socket(AF_INET,SOCK_STREAM)
+    sock = socket(AF_INET, SOCK_STREAM)
 
     def __init__(self, server):
         try:

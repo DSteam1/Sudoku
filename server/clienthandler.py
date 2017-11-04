@@ -1,7 +1,8 @@
-from threading import Thread
-from socket import error as soc_error
 import select
-from utils import init_logging
+from socket import error as soc_error
+from threading import Thread
+
+from common.utils import init_logging
 
 LOG = init_logging()
 
