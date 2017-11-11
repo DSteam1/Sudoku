@@ -19,12 +19,22 @@ def assemble_insert_msg_content(row, column, digit):
 
 
 def assemble_board_state_msg_content(board):
-    """Assemble a message conveying the current board state."""
+    """
+    Assemble a message conveying the current board state.
+    The first half contains the digits and the second half contains values 1 and 2 depending on
+    whether the cell is pre-entered or user-entered.
+    """
     rows = board.ROWS
     content = ""
     for row in rows:
         for cell in row:
             content += str(cell.get_value())
+            content += CONTENT_SEPARATOR
+    content = content[:-1]
+    content += SCORE_PLAYER_SEPARATOR
+    for row in rows:
+        for cell in row:
+            content += str(cell.type)
             content += CONTENT_SEPARATOR
     content = content[:-1]
     return content
@@ -56,10 +66,12 @@ def parse_insert_msg_content(content):
     return row, column, digit
 
 
-def parse_board_state_msg_content(content):
-    """Parse a board state message."""
-    #TODO: parse board state message for client
-    return
+def separate_board_state_msg_content(content):
+    """Separate a board state message into two main parts."""
+    parts = content.split(SCORE_PLAYER_SEPARATOR)
+    digits = parts[0]
+    cell_types = parts[1]
+    return digits, cell_types
 
 
 def send(socket, message_type, content):

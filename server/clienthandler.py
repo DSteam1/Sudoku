@@ -75,6 +75,11 @@ class ClientHandler(Thread):
             content = content[:-1]
         protocol.send(self.client_socket, GAME_LIST_MSG, content)
 
+    def send_scores(self):
+        """Send the current scores."""
+        content = protocol.assemble_send_scores_msg_content(self.game.scores)
+        protocol.send(self.client_socket, SEND_SCORES_MSG, content)
+
     def handle_join_game(self, content):
         """Handle game join request."""
         game_id = int(content)
@@ -83,6 +88,8 @@ class ClientHandler(Thread):
             self.game.add_connected_client(self)
             LOG.debug("Client " + str(self.id) + " joined game " + str(game_id))
             protocol.send(self.client_socket, SUCCESSFUL_JOIN_MSG, "Successfully joined game.")
+            self.send_new_board_state()
+            self.send_scores()
         else:
             LOG.debug("Client could not join game with id " + str(game_id) + ". Game with that id does not exist.")
             protocol.send(self.client_socket, FAILED_JOIN_MSG, "Failed to join game.")
@@ -92,17 +99,22 @@ class ClientHandler(Thread):
         self.game = self.server.create_game()
         self.game.add_connected_client(self)
         self.send_new_board_state()
+        self.send_scores()
 
     def handle_insert(self, msg_content):
         """Handle insertion event."""
         row, column, digit = protocol.parse_insert_msg_content(msg_content)
-        validated_digit = self.game.update_board(row, column, digit, self.id)
-        if not validated_digit:
+        score_change = self.game.update_board(row, column, digit, self.id)
+        if not score_change or score_change < 1:
             LOG.debug("Invalid insertion attempt of digit " + str(digit) + " into coordinates " +
                       str(row) + ":" + str(column))
+            protocol.send(self.client_socket, FAILED_INS_MSG, "Insertion failed.")
+            self.send_scores()
         else:
             LOG.debug("Successful insertion")
+            protocol.send(self.client_socket, SUCCESSFUL_INS_MSG, "Insertion successful.")
             self.game.broadcast_new_state()
+            self.send_scores()
 
     def send_new_board_state(self):
         """Send new board state to the client."""
