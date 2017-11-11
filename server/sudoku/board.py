@@ -116,7 +116,10 @@ class Cell:
     def get_value(self):
         v = 0
         self.lock.acquire()
-        v = self.user_value
+        if self.type == Cell.TYPE_PRE_ENTERED:
+            v = self.correct_value;
+        else:
+            v = self.user_value
         self.lock.release()
         return v
         
