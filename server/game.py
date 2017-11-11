@@ -32,7 +32,7 @@ class Game:
 
     def update_board(self, row, column, digit, client_id):
         """Attempt to update the board attached to this game instance."""
-        score_change = self.board.add_number(row, column, digit)
+        score_change = self.board.add_number(column, row, digit)
         if client_id in self.scores:
             self.scores[client_id] += score_change
             LOG.debug("Score of client with id " + str(client_id) + " changed by " + str(score_change))

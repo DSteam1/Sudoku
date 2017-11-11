@@ -83,7 +83,7 @@ class ClientHandler(Thread):
     def handle_join_game(self, content):
         """Handle game join request."""
         game_id = int(content)
-        if game_id in self.server.games:
+        if game_id in self.server.games.keys():
             self.game = self.server.games[game_id]
             self.game.add_connected_client(self)
             LOG.debug("Client " + str(self.id) + " joined game " + str(game_id))
