@@ -113,6 +113,10 @@ def parse_insert_msg_content(content):
     digit = int(content_parts[2])
     return row, column, digit
 
+def parse_score_message(content):
+    content_parts = content.split(CONTENT_SEPARATOR)
+    return content_parts
+
 
 def separate_board_state_msg_content(content):
     """Separate a board state message into two main parts."""

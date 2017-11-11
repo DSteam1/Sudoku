@@ -8,7 +8,7 @@ _GAME_HEIGHT = 600
 _GAME_WIDTH = 800
 
 class GameView:
-    def __init__(self, container, main_ui, board_string):
+    def __init__(self, container, main_ui, board_string, players):
         self.main_ui = main_ui
 
         self.frame_left = Frame(container)
@@ -29,7 +29,7 @@ class GameView:
         self.games_lb = Listbox(self.frame_right, bg="gray99", selectbackground="gray99", height=6)
         self.games_lb.bind("<<ListboxSelect>>", self.no_selection)
         self.games_lb.pack()
-        self.fill_players()
+        self.fill_players(players)
 
         games_txt = Label(self.frame_right, text="My score: 16", font=self.scoreFont)
         games_txt.pack(pady=20)
@@ -48,8 +48,8 @@ class GameView:
         self.enterButton = Button(self.frame_right, text="Exit game", command=self.exit_game)
         self.enterButton.pack( padx=10, pady=10)
 
-    def fill_players(self):
-        for idx, val in enumerate(self.get_players()):  # Insert all games to the list
+    def fill_players(self, players):
+        for idx, val in enumerate(players):  # Insert all games to the list
             self.games_lb.insert(idx, val)
         self.games_lb.pack()
 

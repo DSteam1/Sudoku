@@ -117,10 +117,10 @@ class Application():
         self.empty_frame(self.frame_container)
         MV.MainView(self.frame_container, self, games)
 
-    def game_view(self, game):
+    def game_view(self, game, scores):
         self.window_resize(_GAME_WIDTH, _GAME_HEIGHT)
         self.empty_frame(self.frame_container)
-        GV.GameView(self.frame_container, self, game)
+        GV.GameView(self.frame_container, self, game, scores)
 
     def empty_frame(self, frame):
         for widget in frame.winfo_children():
@@ -158,10 +158,13 @@ class ClientListener(Thread):
             LOG.info("Handled response with type " + message_type)
         elif(message_type == BOARD_STATE_MSG):
             digits, types = protocol.separate_board_state_msg_content(content)
-            self.app.game_view(digits)
+            self.current_digits = digits
+            #self.app.game_view(self.current_digits, self.current_scores)
             LOG.info("Handled response with type " + message_type)
         elif(message_type == SEND_SCORES_MSG):
-            LOG.info("TODO: Handle response with type " + message_type)
+            self.current_scores = protocol.parse_score_message(content)
+            self.app.game_view(self.current_digits, self.current_scores)
+            LOG.info("Handled response with type " + message_type)
         elif (message_type == SUCCESSFUL_INS_MSG):
             LOG.info("Handled response with type " + message_type + ": " + content)
         elif (message_type == FAILED_INS_MSG):
