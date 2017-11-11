@@ -2,6 +2,7 @@
 from threading import Lock
 from test_patterns import PATTERN1
 import logging
+import random
 
 class Board:
     #contains a 9X9 cell grid
@@ -12,7 +13,7 @@ class Board:
             row = [Cell() for c in range(9)]
             self.ROWS.append(row)
 
-    def setup_board(self):
+    def setup_board(self, seed=0):
         for r_b in range(3):
             block = PATTERN1[r_b] #contains 3 lists
             for c_b in range(3):
@@ -24,6 +25,19 @@ class Board:
                         x = c_b * 3 + c
                         v = sblock[c]
                         self.__set_correct_val(x, y, v)
+        
+        #For testing, 0,0 is user changeable
+        if seed == 1:
+            self.ROWS[0][0].type = Cell.TYPE_USER_ENTERED
+        #Set some cells user changeable
+        nr_of_changes = 0
+        max_changes = 15
+        while nr_of_changes < max_changes:
+            ix = random.randint(0,8)
+            iy = random.randint(0,8)
+            if self.ROWS[iy][ix].type == Cell.TYPE_PRE_ENTERED:
+                self.ROWS[iy][ix].type = Cell.TYPE_USER_ENTERED
+                nr_of_changes = nr_of_changes + 1
     
     def __set_correct_val(self, x, y, v):
         if not( x in range(9) and y in range(9) and v in range(1,10)):
@@ -34,13 +48,15 @@ class Board:
         return True
     #returns truth value about success of operation
     def add_number(self, x, y, nr):
-        #try adding a number to the board
+        """try adding a number to the board
+        -1, 0, 1 resulting point value
+        """
         if not( x in range(9) and y in range(9) and nr in range(1,10)):
-            raise ValueError('User entered incorrect value')
+            return 0 # raise ValueError('User entered incorrect value')
         self.LOCK.acquire()
         p = self.ROWS[y][x].set_value(nr)
         self.LOCK.release()
-        return p or False
+        return p
     
     #Retrieve the user visible value
     def get_current_value(self, x, y):
@@ -83,12 +99,17 @@ class Cell:
         self.user_value = 0
     
     def set_value(self, val):
-        p = False
-        if not val in range(1, 10):
-            return False
+        """-1, 0, 1 resulting point value"""
+        p = 0
+        if not val in range(1, 10) or self.type == self.TYPE_PRE_ENTERED:
+            return 0
         self.lock.acquire()
-        self.user_value = val
-        p = val == self.correct_value
+        
+        if val == self.correct_value:
+            p = 1
+            self.user_value = val
+        else :
+            p = -1
         self.lock.release()
         return p
         
@@ -140,7 +161,12 @@ def test_modding_cell():
     assert cell.type == Cell.TYPE_USER_ENTERED
     
     cell.set_value(3)
+    assert cell.user_value == 0
+    cell.set_correct_value(3)
+    cell.set_value(3)
     assert cell.user_value == 3
+
+    
     print("Cell modding tests passed")
 
 def test_generating_board():
@@ -149,41 +175,38 @@ def test_generating_board():
 
 def test_modding_board():
     board = Board()
+    board.setup_board(1)
     
-    res = board.add_number(0,0,4)
-    assert board.ROWS[0][0].user_value == 4
+    res = board.add_number(0,0,1)
+    assert board.ROWS[0][0].user_value == 1 and res == 1
     
-    try:
-        res = board.add_number(10,10,5)
-        assert False
-    except ValueError:
-        res = None
-    try:
-        board.add_number(0,10,5)
-        assert False
-    except ValueError:
-        res = None
-    try:
-        board.add_number(10,0,5)
-        assert False
-    except ValueError:
-        res = None
-    try:
-        board.add_number(0,0,0)
-        assert False
-    except ValueError:
-        res = None
+    res = board.add_number(0,0,3)
+    assert board.ROWS[0][0].user_value == 1 and res == -1
+    
+    res = board.add_number(10,10,5)
+    assert res == 0
+    
+    res = board.add_number(0,10,5)
+    assert res == 0
+    
+    res = board.add_number(10,0,5)
+    assert res == 0
+    
+    res = board.add_number(0,0,0)
+    assert res == 0
+        
     print("Board modding without errors")
     
 def test_getting_value_no_issues():
     board = Board()
-    board.add_number(0,1,4)
-    
-    val = board.get_current_value(0,1)
-    assert val == 4
+    board.setup_board(1)
+    res = board.add_number(0,0,1)
+    assert res == 1
+    val = board.get_current_value(0,0)
+    assert val == 1
     val = 5
-    val2 = board.get_current_value(0,1)
-    assert val2 == 4
+    val2 = board.get_current_value(0,0)
+    assert val2 == 1
     print("Getting value from board poses no issues")
     
 def test_draw_board():
@@ -205,30 +228,37 @@ if __name__ == '__main__':
         test_new_cell()
     except AssertionError:
         nr_of_failed = nr_of_failed + 1
+        LOG.debug("Test new cell failed")
     
     try:
         test_modding_cell()
     except AssertionError:
         nr_of_failed = nr_of_failed + 1
+        LOG.debug("Test modding cell failed")
     
     try:
         test_generating_board()
     except AssertionError:
         nr_of_failed = nr_of_failed + 1
+        LOG.debug("Test generating board failed")
     
     try:
         test_modding_board()
     except AssertionError:
         nr_of_failed = nr_of_failed + 1
+        LOG.debug("Test modding board failed")
     
     try:
         test_getting_value_no_issues()
     except AssertionError:
         nr_of_failed = nr_of_failed + 1
+        LOG.debug("Test generating value no issues failed")
         
     try:
         test_draw_board()
     except AssertionError:
         nr_of_failed = nr_of_failed + 1
+        LOG.debug("Test draw board failed")
+        
     LOG.debug("Tests completed. Passed %s of %s", nr_of_tests - nr_of_failed, nr_of_tests)
     
