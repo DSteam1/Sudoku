@@ -31,8 +31,8 @@ class ClientHandler(Thread):
         """Handle the messages from the client. Loop until disconnection."""
         client_shutdown = False
         try:
-            protocol.send(self.client_socket, GENERIC_MSG, "Welcome! Testing server->client message sending")
-            LOG.debug("Sent welcome message to client " + str(self.client_address))
+            #protocol.send(self.client_socket, GENERIC_MSG, "Welcome! Testing server->client message sending")
+            #LOG.debug("Sent welcome message to client " + str(self.client_address))
             while not client_shutdown:
                 read_sockets, write_sockets, error_sockets = select.select([self.client_socket], [], [])
                 for socket in read_sockets:

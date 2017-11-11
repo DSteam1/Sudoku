@@ -4,82 +4,54 @@ import tkMessageBox
 from socket import AF_INET, SOCK_STREAM, socket
 from socket import error as socket_error
 from argparse import ArgumentParser
+import OtherViews as OV
+import MainView as MV
+import GameView as GV
 
-FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
-logging.basicConfig(level=logging.DEBUG,format=FORMAT)
-LOG = logging.getLogger()
+from common.utils import init_logging
+from common.constants import *
+import common.protocol as protocol
 
-class NicknameDialog:
-    def __init__(self, parent):
-        self.parent = parent
-        self.top = Toplevel(parent)
+LOG = init_logging()
 
-        self.nicknameLabel = Label(self.top, text="Nickname: ")
-        self.nicknameLabel.pack(side=LEFT)
+_WIDTH = 666
+_HEIGHT = 300
+_GAME_HEIGHT = 600
+_GAME_WIDTH = 800
 
-        self.entry = Entry(self.top, bd=5)
-        self.entry.pack(side=LEFT)
-        self.entry.insert(0, "nick")
+class Application():
+    def __init__(self):
+        self.root = Tk()
+        self.root.minsize(width=_WIDTH, height=_HEIGHT)
 
-        self.enterButton = Button(self.top, text="Enter", command=self.handleEnterButton)
-        self.enterButton.pack(side=LEFT)
+        self.root.title("Sudoku")
 
-    #TODO: spaces are not allowed!!
-    def handleEnterButton(self):
-        nickname = self.entry.get()
-        if(len(nickname) == 0):
-            self.tooShortNicknameError()
-        elif(len(nickname) > 8):
-            self.tooLongNicknameError()
+        self.frame_container = Frame(self.root)
+        self.frame_container.place(relx=0.5, rely=0.5, anchor=CENTER)
+
+        self.board_name = "debug"
+        #  self.board_name = "n00b"
+
+        self.nickname_view()  # Show nickname initially
+        #  self.game_view()  # Replace for debugging
+
+        self.root.mainloop()
+
+        # After exiting from main loop
+        print("Closing connections")
+
+
+        # Connect to server
+
+    def connect(self):
+        success = self.tryCreateConnection()
+        if success:
+            self.main_view()
         else:
-            self.parent.nickname = nickname
-            self.top.destroy()
+            tkMessageBox.showinfo("Error", "Error connecting to server")
+            self.count += 1
 
-    def tooShortNicknameError(self):
-        tkMessageBox.showinfo("Error", "Too short nickname")
-
-    def tooLongNicknameError(self):
-        tkMessageBox.showinfo("Error", "Too long nickname")
-
-class ServerAddressDialog:
-    def __init__(self, parent):
-        self.parent = parent
-        self.top = Toplevel(parent)
-
-        self.serverAddressLabel = Label(self.top, text="Server address: ")
-        self.serverAddressLabel.pack(side=LEFT)
-
-        self.entry = Entry(self.top, bd=5)
-        self.entry.insert(0, "127.0.0.1") #should specify default
-        self.entry.pack(side=LEFT)
-
-        self.connectButton = Button(self.top, text="Enter", command=self.handleEnterButton)
-        self.connectButton.pack(side=LEFT)
-
-    def handleEnterButton(self):
-        server = self.entry.get()
-        if(len(server) == 0):
-            self.tooShortServerError()
-        else:
-            self.parent.server = server
-            self.top.destroy()
-
-    def tooShortServerError(self):
-        self.top.tkMessageBox.showinfo("Error", "Please enter server address")
-
-class Application(Frame):
-    def __init__(self, master=None):
-        Frame.__init__(self, master)
-        n = NicknameDialog(self)
-        self.wait_window(n.top)
-        s = ServerAddressDialog(self)
-        self.wait_window(s.top)
-
-        if(self.tryCreateConnection()):
-            print("Connection successful")
-
-
-    def tryCreateConnection(self): #self.server is set in ServerAddressDialog
+    def tryCreateConnection(self):  # self.server is set in ServerAddressDialog
         LOG.info("Connecting to %s." % self.server)
         port = 7777
 
@@ -93,11 +65,75 @@ class Application(Frame):
             LOG.info('Local end-point is  bound to %s:%d' % self.socket.getsockname())
             return True
         except:
-            tkMessageBox.showinfo("Error", "Could not connect to server. Closing the application")
             self.socket.close()
             self.master.destroy()
             return False
 
+    def get_games(self):
+        LOG.info("Requesting available games from server")
+        protocol.send(self.socket, REQ_GAMES_MSG, "")
+        LOG.info("Waiting respnse for games request")
+        message = protocol.receive(self.socket)
+        message_type, content = protocol.parse(message)
+        LOG.info("Received response with type " + message_type)
+        if(message_type == GAME_LIST_MSG):
+            return content.split(CONTENT_SEPARATOR)
+        else:
+            #TODO: HANDLE PROBLEMS
+            pass
 
-app = Application()
-app.mainloop()
+    def create_game(self):
+        LOG.info("Requesting new game creation")
+        protocol.send(self.socket, CREATE_GAME_MSG, "")
+        LOG.info("Waiting respnse for new game creation")
+        message = protocol.receive(self.socket)
+        message_type, content = protocol.parse(message)
+        LOG.info("Received response with type " + message_type)
+        if(message_type == BOARD_STATE_MSG):
+            return content
+        else:
+            # TODO: HANDLE PROBLEMS
+            pass
+
+
+
+    # VIEWS
+
+    def nickname_view(self):
+        self.window_resize(_WIDTH, _HEIGHT)
+        self.empty_frame(self.frame_container)
+        OV.NicknameView(self.frame_container, self)
+
+    def server_address_view(self):
+        self.window_resize(_WIDTH, _HEIGHT)
+        self.empty_frame(self.frame_container)
+        OV.ServerAddressView(self.frame_container, self)
+
+    def main_view(self):
+        self.selected_game = None
+        self.window_resize(_WIDTH, _HEIGHT)
+        self.empty_frame(self.frame_container)
+        MV.MainView(self.frame_container, self, self.get_games())
+
+    def game_view(self, selected_game):
+        if(selected_game == None):
+            game = self.create_game()
+        else:
+            #TODO: JOIN WITH EXISTING GAME
+            pass
+
+        self.window_resize(_GAME_WIDTH, _GAME_HEIGHT)
+        self.empty_frame(self.frame_container)
+        GV.GameView(self.frame_container, self, game)
+
+    def empty_frame(self, frame):
+        for widget in frame.winfo_children():
+            widget.destroy()
+
+    def window_resize(self, width, height):
+        self.root.minsize(width=width, height=height)
+
+
+if __name__ == '__main__':
+    Application()
+

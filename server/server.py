@@ -46,6 +46,7 @@ class Server:
         game = Game(self.latest_game_id)
         self.latest_game_id += 1
         self.games.append(game)
+        return game
 
     def disconnect(self):
         """Close the socket."""

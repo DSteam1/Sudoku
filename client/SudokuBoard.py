@@ -154,11 +154,12 @@ class SudokuBoard(object):
     """
     Sudoku Board representation
     """
-    def __init__(self, board_file):
-        self.board = self.__create_board(board_file)
+    def __init__(self, board_string):
+        self.board = self.__create_board(board_string)
 
-    def __create_board(self, board_file):
+    def __create_board(self, board_string):
         board = []
+        '''
         for line in board_file:
             line = line.strip()
             if len(line) != 9:
@@ -173,20 +174,40 @@ class SudokuBoard(object):
                         "Valid characters for a sudoku puzzle must be in 0-9"
                     )
                 board[-1].append(int(c))
+        print(board)
 
         if len(board) != 9:
             raise SudokuError("Each sudoku puzzle must be 9 lines long")
-        return board
+        '''
 
+        nrs = board_string.split(',')
+        line = []
+        for n in nrs:
+            if(len(line) == 9):
+                board.append(line)
+                line = []
+                line.append(int(n))
+            else:
+                line.append(int(n))
+        board.append(line)
+
+        if len(board) != 9:
+            raise SudokuError("Each sudoku puzzle must be 9 lines long")
+
+        for a in board:
+            if len(a) != 9:
+                raise SudokuError("Each line in the sudoku puzzle must be 9 chars long.")
+
+        return board
 
 class SudokuGame(object):
     """
     A Sudoku game, in charge of storing the state of the board and checking
     whether the puzzle is completed.
     """
-    def __init__(self, board_file):
-        self.board_file = board_file
-        self.start_puzzle = SudokuBoard(board_file).board
+    def __init__(self, board_string):
+        self.board_file = board_string
+        self.start_puzzle = SudokuBoard(board_string).board
 
     def start(self):
         self.game_over = False
