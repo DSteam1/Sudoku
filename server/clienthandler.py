@@ -48,10 +48,10 @@ class ClientHandler(Thread):
                             LOG.debug("Attempting to insert")
                             self.handle_insert(message_content)
                         if message_type == JOIN_GAME_MSG:
-                            LOG.debug("Client attempting to join ongoing game")
-                            self.handle_join(message_content)
+                            LOG.debug("Client is attempting to join an ongoing game.")
+                            self.handle_join_game(message_content)
                         if message_type == CREATE_GAME_MSG:
-                            LOG.debug("Client attempting to create new game")
+                            LOG.debug("Client is attempting to create a new game.")
                             self.handle_create_game()
                         if message_type == CLIENT_DISCONNECT_MSG:
                             LOG.debug("Client requested disconnection with message: " + message_content)
@@ -59,7 +59,6 @@ class ClientHandler(Thread):
                     else:
                         LOG.debug("Client terminated connection")
                         client_shutdown = True
-
         except soc_error as e:
             LOG.debug("Lost connection with %s:%d" % self.client_address)
         finally:
@@ -68,16 +67,25 @@ class ClientHandler(Thread):
     def send_game_list(self):
         """Send the list of games to the client."""
         content = ""
-        for game in self.server.games:
-            content += str(game.id)
+        content_list = list(self.server.games.keys())
+        for element in content_list:
+            content += str(element)
             content += CONTENT_SEPARATOR
-        content = content[:-1]
+        if len(content) > 0:
+            content = content[:-1]
         protocol.send(self.client_socket, GAME_LIST_MSG, content)
 
-    def handle_join(self, content):
+    def handle_join_game(self, content):
         """Handle game join request."""
-        #TODO: handle join
-        return
+        game_id = int(content)
+        if game_id in self.server.games:
+            self.game = self.server.games[game_id]
+            self.game.add_connected_client(self)
+            LOG.debug("Client " + str(self.id) + " joined game " + str(game_id))
+            protocol.send(self.client_socket, SUCCESSFUL_JOIN_MSG, "Successfully joined game.")
+        else:
+            LOG.debug("Client could not join game with id " + str(game_id) + ". Game with that id does not exist.")
+            protocol.send(self.client_socket, FAILED_JOIN_MSG, "Failed to join game.")
 
     def handle_create_game(self):
         """Handle game creation request."""
@@ -88,12 +96,12 @@ class ClientHandler(Thread):
     def handle_insert(self, msg_content):
         """Handle insertion event."""
         row, column, digit = protocol.parse_insert_msg_content(msg_content)
-        validated_digit = self.game.update_board(row, column, digit)
+        validated_digit = self.game.update_board(row, column, digit, self.id)
         if not validated_digit:
             LOG.debug("Invalid insertion attempt of digit " + str(digit) + " into coordinates " +
                       str(row) + ":" + str(column))
         else:
-            LOG.debug("Successful insertion ")
+            LOG.debug("Successful insertion")
             self.game.broadcast_new_state()
 
     def send_new_board_state(self):
@@ -103,5 +111,6 @@ class ClientHandler(Thread):
 
     def disconnect(self):
         """Disconnect the client."""
+        self.game.remove_connected_client(self.id)
         self.client_socket.close()
         LOG.debug("Terminating client %s:%d" % self.client_address)

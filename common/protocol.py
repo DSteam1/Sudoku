@@ -30,6 +30,15 @@ def assemble_board_state_msg_content(board):
     return content
 
 
+def assemble_send_scores_msg_content(scores):
+    """Assemble a message containing the current scores of players."""
+    content = ""
+    for player in scores:
+        content += (str(player) + SCORE_PLAYER_SEPARATOR + str(scores[player]) + CONTENT_SEPARATOR)
+    content = content[:-1]
+    return content
+
+
 def parse(message):
     """Parse a message."""
     message_parts = message.split(";")

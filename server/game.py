@@ -18,6 +18,7 @@ class Game:
 
     def add_connected_client(self, client):
         """Add a client to the game."""
+        self.scores[client.id] = 0
         self.connected_clients.append(client)
 
     def remove_connected_client(self, client_index):
@@ -34,10 +35,13 @@ class Game:
         score_change = self.board.add_number(row, column, digit)
         if client_id in self.scores:
             self.scores[client_id] += score_change
+            LOG.debug("Score of client with id " + str(client_id) + " changed by " + str(score_change))
         else:
-            LOG.debug("Game could not update the score of client " + str(client_id) +
-                      " since it is not in the scores dictionary.")
+            LOG.debug("Score of client with id " + str(client_id) + " could not be updated.")
         return score_change
+
+    def get_score(self, client_id):
+        return self.scores[client_id]
 
     def get_board(self):
         """Get the current board."""

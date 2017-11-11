@@ -18,7 +18,7 @@ class Server:
             LOG.info("Server socket initialization complete.")
         except:
             LOG.error("Error initializing server socket.")
-        self.games = []
+        self.games = {}
         self.latest_game_id = 0
         self.listen_for_connections()
 
@@ -44,8 +44,8 @@ class Server:
     def create_game(self):
         """Create a new game instance"""
         game = Game(self.latest_game_id)
+        self.games[self.latest_game_id] = game
         self.latest_game_id += 1
-        self.games.append(game)
         return game
 
     def disconnect(self):
