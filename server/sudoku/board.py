@@ -29,15 +29,20 @@ class Board:
         #For testing, 0,0 is user changeable
         if seed == 1:
             self.ROWS[0][0].type = Cell.TYPE_USER_ENTERED
-        #Set some cells user changeable
-        nr_of_changes = 0
-        max_changes = 15
-        while nr_of_changes < max_changes:
-            ix = random.randint(0,8)
-            iy = random.randint(0,8)
-            if self.ROWS[iy][ix].type == Cell.TYPE_PRE_ENTERED:
-                self.ROWS[iy][ix].type = Cell.TYPE_USER_ENTERED
-                nr_of_changes = nr_of_changes + 1
+            self.ROWS[1][1].type = Cell.TYPE_USER_ENTERED
+            self.until_solved = 2
+        else:
+            
+            #Set some cells user changeable
+            nr_of_changes = 0
+            max_changes = 15
+            while nr_of_changes < max_changes:
+                ix = random.randint(0,8)
+                iy = random.randint(0,8)
+                if self.ROWS[iy][ix].type == Cell.TYPE_PRE_ENTERED:
+                    self.ROWS[iy][ix].type = Cell.TYPE_USER_ENTERED
+                    nr_of_changes = nr_of_changes + 1
+            self.until_solved = nr_of_changes
     
     def __set_correct_val(self, x, y, v):
         if not( x in range(9) and y in range(9) and v in range(1,10)):
@@ -55,9 +60,18 @@ class Board:
             return 0 # raise ValueError('User entered incorrect value')
         self.LOCK.acquire()
         p = self.ROWS[y][x].set_value(nr)
+        if p == 1:
+            self.until_solved = self.until_solved - 1
         self.LOCK.release()
         return p
     
+    def is_solved(self):
+        p = False
+        self.LOCK.acquire()
+        p = self.until_solved <= 0
+        self.LOCK.release()
+        return p
+        
     #Retrieve the user visible value
     def get_current_value(self, x, y):
         if not( x in range(9) and y in range(9)):
@@ -101,15 +115,15 @@ class Cell:
     def set_value(self, val):
         """-1, 0, 1 resulting point value"""
         p = 0
-        if not val in range(1, 10) or self.type == self.TYPE_PRE_ENTERED:
-            return 0
         self.lock.acquire()
-        
-        if val == self.correct_value:
-            p = 1
-            self.user_value = val
-        else :
-            p = -1
+        if not val in range(1, 10) or self.type == self.TYPE_PRE_ENTERED or self.user_value == val:
+            p = 0
+        else:
+            if val == self.correct_value:
+                p = 1
+                self.user_value = val
+            else :
+                p = -1
         self.lock.release()
         return p
         
@@ -216,13 +230,32 @@ def test_draw_board():
     board = Board()
     board.setup_board()
     board.print_board()
+    
+def test_board_solved():
+    board = Board()
+    board.setup_board(1)
+    
+    assert board.is_solved() == False
+    
+    board.add_number(0, 0, 1)
+    
+    assert board.is_solved() == False
+    
+    board.add_number(0, 0, 3)
+    
+    assert board.is_solved() == False
+    
+    board.add_number(1, 1, 5)
+    
+    assert board.is_solved()
+    print("Board solved test passed")
 
 if __name__ == '__main__':
     FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
     logging.basicConfig(level=logging.DEBUG,format=FORMAT)
     LOG = logging.getLogger()
     
-    nr_of_tests = 6
+    nr_of_tests = 7
     nr_of_failed = 0
     
     #run tests
@@ -262,6 +295,12 @@ if __name__ == '__main__':
     except AssertionError:
         nr_of_failed = nr_of_failed + 1
         LOG.debug("Test draw board failed")
+        
+    try:
+        test_board_solved()
+    except AssertionError:
+        nr_of_failed = nr_of_failed + 1
+        LOG.debug("Test board solved failed")
         
     LOG.debug("Tests completed. Passed %s of %s", nr_of_tests - nr_of_failed, nr_of_tests)
     
