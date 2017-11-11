@@ -3,6 +3,54 @@ from socket import error as socket_error
 from constants import *
 
 
+"""
+Format of different messages
+Messages never end with a separator
+() are used to group together recurring parts here for clarity. They are NOT part of the actual messages.
+
+Generic message
+GENERIC_MSG + SEPARATOR + some_string
+
+Insert message
+INSERT_MSG + SEPARATOR + row + CONTENT_SEPARATOR + column + CONTENT_SEPARATOR + cell_value_to_be_inserted
+
+Board state message
+First part includes the values of all cells row by row. Second part includes the types of all cells row by row.
+BOARD_STATE_MSG + SEPARATOR + (cell_value + CONTENT_SEPARATOR) + (cell_value + ...) until all values are here ... + 
++ SCORE_PLAYER_SEPARATOR + (cell_type + CONTENT_SEPARATOR) + (cell_type + CONTENT_SEPARATOR) + ... until all types are here
+
+Game (id) list request message
+REQ_GAMES_MSG + SEPARATOR + ?
+
+Game list message
+GAME_LIST_MSG + SEPARATOR + (game_id + CONTENT_SEPARATOR) + (game_id + CONTENT_SEPARATOR) + ... + game_id
+
+Join game request message
+JOIN_GAME_MSG + SEPARATOR + game_id
+
+Create game request message
+CREATE_GAME_MSG + SEPARATOR + ?
+
+Score sending message
+SEND_SCORES_MSG + SEPARATOR + (client_id + SCORE_PLAYER_SEPARATOR + client_score + CONTENT_SEPARATOR) + (client_id + ...
+
+Successful join message
+SUCCESSFUL_JOIN_MSG + SEPARATOR + some_string
+
+Client disconnection request message
+CLIENT_DISCONNECT_MSG + SEPARATOR + some_string
+
+Failed game join message
+FAILED_JOIN_MSG + SEPARATOR + some_string
+
+Successful insert message
+SUCCESSFUL_INS_MSG + SEPARATOR + some_string
+
+Failed insert message
+FAILED_INS_MSG + SEPARATOR + some_string
+"""
+
+
 def assemble(message_type, content):
     """Assemble a message."""
     character_count = len(message_type) + len(SEPARATOR) + len(content)
