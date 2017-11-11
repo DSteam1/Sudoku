@@ -50,6 +50,9 @@ class ClientHandler(Thread):
                         if message_type == JOIN_GAME_MSG:
                             LOG.debug("Client attempting to join ongoing game")
                             self.handle_join(message_content)
+                        if message_type == CREATE_GAME_MSG:
+                            LOG.debug("Client attempting to create new game")
+                            self.handle_create_game()
                         if message_type == CLIENT_DISCONNECT_MSG:
                             LOG.debug("Client requested disconnection with message: " + message_content)
                             client_shutdown = True
