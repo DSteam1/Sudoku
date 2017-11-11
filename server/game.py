@@ -8,10 +8,13 @@ class Game:
     """
     Instance of a sudoku game on the server side
     """
-    def __init__(self):
+    def __init__(self, id):
+        self.id = id
         self.board = board.Board()
         self.board.setup_board()
         self.connected_clients = []
+        # Dictionary with keys being client id-s and values being the score values
+        self.scores = {}
 
     def add_connected_client(self, client):
         """Add a client to the game."""
@@ -26,10 +29,15 @@ class Game:
         """Get the list of connected clients in the game."""
         return self.connected_clients
 
-    def update_board(self, row, column, digit):
+    def update_board(self, row, column, digit, client_id):
         """Attempt to update the board attached to this game instance."""
-        validated_digit = self.board.add_number(row, column, digit)
-        return validated_digit
+        score_change = self.board.add_number(row, column, digit)
+        if client_id in self.scores:
+            self.scores[client_id] += score_change
+        else:
+            LOG.debug("Game could not update the score of client " + str(client_id) +
+                      " since it is not in the scores dictionary.")
+        return score_change
 
     def get_board(self):
         """Get the current board."""

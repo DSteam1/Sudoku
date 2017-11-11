@@ -15,7 +15,7 @@ def assemble(message_type, content):
 
 def assemble_insert_msg_content(row, column, digit):
     """Assemble a digit insertion message."""
-    return str(row) + INS_MSG_SEPARATOR + str(column) + INS_MSG_SEPARATOR + str(digit)
+    return str(row) + CONTENT_SEPARATOR + str(column) + CONTENT_SEPARATOR + str(digit)
 
 
 def assemble_board_state_msg_content(board):
@@ -24,8 +24,8 @@ def assemble_board_state_msg_content(board):
     content = ""
     for row in rows:
         for cell in row:
-            content += cell.get_value()
-            content += BOARD_STATE_MSG_SEPARATOR
+            content += str(cell.get_value())
+            content += CONTENT_SEPARATOR
     content = content[:-1]
     return content
 
@@ -40,10 +40,10 @@ def parse(message):
 
 def parse_insert_msg_content(content):
     """Parse a digit insertion message."""
-    content_parts = content.split(INS_MSG_SEPARATOR)
-    row = content_parts[0]
-    column = content_parts[1]
-    digit = content_parts[2]
+    content_parts = content.split(CONTENT_SEPARATOR)
+    row = int(content_parts[0])
+    column = int(content_parts[1])
+    digit = int(content_parts[2])
     return row, column, digit
 
 

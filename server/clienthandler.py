@@ -14,13 +14,15 @@ class ClientHandler(Thread):
     """
     A handler which the server uses to interact with the client
     """
-    def __init__(self, client_socket, client_address, game):
+    def __init__(self, server, client_socket, client_address, client_id):
         Thread.__init__(self)
+        self.server = server
+        self.id = client_id
         self.client_socket = client_socket
         self.client_address = client_address
-        self.game = game
         self.board = board.Board()
         self.board.setup_board()
+        self.game = None
 
     def run(self):
         self.handle()
@@ -39,9 +41,15 @@ class ClientHandler(Thread):
                         message_type, message_content = protocol.parse(message)
                         if message_type == GENERIC_MSG:
                             LOG.debug("Received message: " + message_content)
+                        if message_type == REQ_GAMES_MSG:
+                            LOG.debug("Received game list request. Sending game list to client.")
+                            self.send_game_list()
                         if message_type == INSERT_MSG:
                             LOG.debug("Attempting to insert")
                             self.handle_insert(message_content)
+                        if message_type == JOIN_GAME_MSG:
+                            LOG.debug("Client attempting to join ongoing game")
+                            self.handle_join(message_content)
                         if message_type == CLIENT_DISCONNECT_MSG:
                             LOG.debug("Client requested disconnection with message: " + message_content)
                             client_shutdown = True
@@ -53,6 +61,26 @@ class ClientHandler(Thread):
             LOG.debug("Lost connection with %s:%d" % self.client_address)
         finally:
             self.disconnect()
+
+    def send_game_list(self):
+        """Send the list of games to the client."""
+        content = ""
+        for game in self.server.games:
+            content += str(game.id)
+            content += CONTENT_SEPARATOR
+        content = content[:-1]
+        protocol.send(self.client_socket, GAME_LIST_MSG, content)
+
+    def handle_join(self, content):
+        """Handle game join request."""
+        #TODO: handle join
+        return
+
+    def handle_create_game(self):
+        """Handle game creation request."""
+        self.game = self.server.create_game()
+        self.game.add_connected_client(self)
+        self.send_new_board_state()
 
     def handle_insert(self, msg_content):
         """Handle insertion event."""
