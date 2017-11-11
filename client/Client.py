@@ -96,6 +96,21 @@ class Application():
             # TODO: HANDLE PROBLEMS
             pass
 
+    def join_game(self, id):
+        LOG.info("Requesting joining a game")
+        protocol.send(self.socket, JOIN_GAME_MSG, id)
+        LOG.info("Waiting response for join game")
+        message = protocol.receive(self.socket)
+        message_type, content = protocol.parse(message)
+        print(message)
+        LOG.info("Received response with type " + message_type)
+        if (message_type == BOARD_STATE_MSG):
+            digits, cell_types = protocol.separate_board_state_msg_content(content)
+            return digits
+        else:
+            # TODO: HANDLE PROBLEMS
+            pass
+
     def insert_number(self, row, column, digit):
         LOG.info("Requesting number insertion")
         msg = protocol.assemble_insert_msg_content(row, column, digit)
@@ -132,8 +147,7 @@ class Application():
         if(selected_game == None):
             game = self.create_game()
         else:
-            #TODO: JOIN WITH EXISTING GAME
-            pass
+            game = self.join_game(selected_game)
 
         self.window_resize(_GAME_WIDTH, _GAME_HEIGHT)
         self.empty_frame(self.frame_container)
