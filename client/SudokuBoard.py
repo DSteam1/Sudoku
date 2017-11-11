@@ -19,8 +19,9 @@ class SudokuUI(Frame):
     """
     The Tkinter UI, responsible for drawing the board and accepting user input.
     """
-    def __init__(self, parent, game):
+    def __init__(self, parent, game, main_ui):
         self.game = game
+        self.main_ui = main_ui
         Frame.__init__(self, parent)
         self.parent = parent
 
@@ -137,12 +138,16 @@ class SudokuUI(Frame):
         if self.game.game_over:
             return
         if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
-            self.game.puzzle[self.row][self.col] = int(event.char)
-            self.col, self.row = -1, -1
-            self.__draw_puzzle()
-            self.__draw_cursor()
-            if self.game.check_win():
-                self.__draw_victory()
+            success = self.main_ui.insert_number(self.row, self.col, int(event.char))
+            if(success):
+                self.game.puzzle[self.row][self.col] = int(event.char)
+                self.col, self.row = -1, -1
+                self.__draw_puzzle()
+                self.__draw_cursor()
+                if self.game.check_win():
+                    self.__draw_victory()
+            else:
+                self.col, self.row = -1, -1
 
     def __clear_answers(self):
         self.game.start()

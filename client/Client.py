@@ -90,12 +90,25 @@ class Application():
         message_type, content = protocol.parse(message)
         LOG.info("Received response with type " + message_type)
         if(message_type == BOARD_STATE_MSG):
-            return content
+            digits, cell_types = protocol.separate_board_state_msg_content(content)
+            return digits
         else:
             # TODO: HANDLE PROBLEMS
             pass
 
-
+    def insert_number(self, row, column, digit):
+        LOG.info("Requesting number insertion")
+        msg = protocol.assemble_insert_msg_content(row, column, digit)
+        protocol.send(self.socket, INSERT_MSG, msg)
+        LOG.info("Waiting response for number insertion")
+        message = protocol.receive(self.socket)
+        message_type, content = protocol.parse(message)
+        LOG.info("Received response with type " + message_type)
+        print(content)
+        if(message_type == SEND_SCORES_MSG):
+            return True
+        else:
+            return False
 
     # VIEWS
 

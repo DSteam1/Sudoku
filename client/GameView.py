@@ -18,7 +18,7 @@ class GameView:
 
         game = SudokuGame(board_string)
         game.start()  # Start game
-        SudokuUI(self.frame_left, game)  # Display sudoku board
+        SudokuUI(self.frame_left, game, main_ui)  # Display sudoku board
 
         self.frame_right = Frame(container)
         self.frame_right.pack(side=RIGHT, padx=20, pady=10)

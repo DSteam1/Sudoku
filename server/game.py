@@ -51,7 +51,7 @@ class Game:
         """Send the new board state to all clients connected to this game instance."""
         LOG.debug("Sending new board states to clients")
         for client in self.connected_clients:
-            client.send_new_board_state(board)
+            client.send_new_board_state()
 
     def is_game_complete(self):
         complete = self.board.is_solved()
