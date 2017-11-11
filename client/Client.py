@@ -1,12 +1,13 @@
 from Tkinter import *
 import logging
 import tkMessageBox
-from socket import AF_INET, SOCK_STREAM, socket
+from socket import AF_INET, SOCK_STREAM, socket, error
 from socket import error as socket_error
 from argparse import ArgumentParser
 import OtherViews as OV
 import MainView as MV
 import GameView as GV
+from threading import Thread
 
 from common.utils import init_logging
 from common.constants import *
@@ -46,12 +47,13 @@ class Application():
     def connect(self):
         success = self.tryCreateConnection()
         if success:
-            self.main_view()
+            self.listener = ClientListener(self.socket, self)
+            self.get_games()
         else:
             tkMessageBox.showinfo("Error", "Error connecting to server")
             self.count += 1
 
-    def tryCreateConnection(self):  # self.server is set in ServerAddressDialog
+    def tryCreateConnection(self):
         LOG.info("Connecting to %s." % self.server)
         port = 7777
 
@@ -73,57 +75,29 @@ class Application():
         LOG.info("Requesting available games from server")
         protocol.send(self.socket, REQ_GAMES_MSG, "")
         LOG.info("Waiting respnse for games request")
-        message = protocol.receive(self.socket)
-        message_type, content = protocol.parse(message)
-        LOG.info("Received response with type " + message_type)
-        if(message_type == GAME_LIST_MSG):
-            return content.split(CONTENT_SEPARATOR)
-        else:
-            #TODO: HANDLE PROBLEMS
-            pass
 
     def create_game(self):
         LOG.info("Requesting new game creation")
         protocol.send(self.socket, CREATE_GAME_MSG, "")
         LOG.info("Waiting respnse for new game creation")
-        message = protocol.receive(self.socket)
-        message_type, content = protocol.parse(message)
-        LOG.info("Received response with type " + message_type)
-        if(message_type == BOARD_STATE_MSG):
-            digits, cell_types = protocol.separate_board_state_msg_content(content)
-            return digits
-        else:
-            # TODO: HANDLE PROBLEMS
-            pass
 
     def join_game(self, id):
         LOG.info("Requesting joining a game")
         protocol.send(self.socket, JOIN_GAME_MSG, id)
         LOG.info("Waiting response for join game")
-        message = protocol.receive(self.socket)
-        message_type, content = protocol.parse(message)
-        print(message)
-        LOG.info("Received response with type " + message_type)
-        if (message_type == BOARD_STATE_MSG):
-            digits, cell_types = protocol.separate_board_state_msg_content(content)
-            return digits
+
+    def game_view_prep(self, selected_game):
+        if (selected_game == None):
+            self.create_game()
         else:
-            # TODO: HANDLE PROBLEMS
-            pass
+
+            self.join_game(selected_game)
 
     def insert_number(self, row, column, digit):
         LOG.info("Requesting number insertion")
         msg = protocol.assemble_insert_msg_content(row, column, digit)
         protocol.send(self.socket, INSERT_MSG, msg)
         LOG.info("Waiting response for number insertion")
-        message = protocol.receive(self.socket)
-        message_type, content = protocol.parse(message)
-        LOG.info("Received response with type " + message_type)
-        print(content)
-        if(message_type == SEND_SCORES_MSG):
-            return True
-        else:
-            return False
 
     # VIEWS
 
@@ -137,18 +111,13 @@ class Application():
         self.empty_frame(self.frame_container)
         OV.ServerAddressView(self.frame_container, self)
 
-    def main_view(self):
+    def main_view(self, games):
         self.selected_game = None
         self.window_resize(_WIDTH, _HEIGHT)
         self.empty_frame(self.frame_container)
-        MV.MainView(self.frame_container, self, self.get_games())
+        MV.MainView(self.frame_container, self, games)
 
-    def game_view(self, selected_game):
-        if(selected_game == None):
-            game = self.create_game()
-        else:
-            game = self.join_game(selected_game)
-
+    def game_view(self, game):
         self.window_resize(_GAME_WIDTH, _GAME_HEIGHT)
         self.empty_frame(self.frame_container)
         GV.GameView(self.frame_container, self, game)
@@ -159,6 +128,51 @@ class Application():
 
     def window_resize(self, width, height):
         self.root.minsize(width=width, height=height)
+
+class ClientListener(Thread):
+    def __init__(self, socket, app):
+        Thread.__init__(self)
+        self.socket = socket
+        self.app = app
+        self.daemon = True
+        self.start()
+
+    def run(self):
+            try:
+                while True:
+                    msg = protocol.receive(self.socket)
+                    if msg:
+                        self.parse_and_handle_message(msg)
+                    else:
+                        self.shut_down()
+                        break
+            except error:
+                return
+
+    def parse_and_handle_message(self, msg):
+        message_type, content = protocol.parse(msg)
+        LOG.info("Received response with type " + message_type)
+        if (message_type == GAME_LIST_MSG):
+            games = content.split(CONTENT_SEPARATOR)
+            self.app.main_view(games)
+            LOG.info("Handled response with type " + message_type)
+        elif(message_type == BOARD_STATE_MSG):
+            digits, types = protocol.separate_board_state_msg_content(content)
+            self.app.game_view(digits)
+            LOG.info("Handled response with type " + message_type)
+        elif(message_type == SEND_SCORES_MSG):
+            LOG.info("TODO: Handle response with type " + message_type)
+        elif (message_type == SUCCESSFUL_INS_MSG):
+            LOG.info("Handled response with type " + message_type + ": " + content)
+        elif (message_type == FAILED_INS_MSG):
+            LOG.info("Handled response with type " + message_type + ": " + content)
+        else:
+            LOG.info("TODO: Handle response with type " + message_type)
+            # TODO: HANDLE PROBLEMS
+            pass
+
+
+
 
 
 if __name__ == '__main__':

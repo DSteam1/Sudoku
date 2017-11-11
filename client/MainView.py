@@ -60,7 +60,7 @@ class MainView:
             tkMessageBox.showinfo("Error", "Connection error")
         else:
             print("Connecting")
-            self.main_ui.game_view(selected_game)
+            self.main_ui.game_view_prep(selected_game[0])
 
     def create_new_game(self):
         player_count = self.players_lb.curselection()
@@ -68,5 +68,5 @@ class MainView:
             tkMessageBox.showinfo("Error", "Select the amount of players")
             return
         else:
-            self.main_ui.game_view(None)
+            self.main_ui.game_view_prep(None)
 

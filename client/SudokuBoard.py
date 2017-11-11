@@ -139,6 +139,7 @@ class SudokuUI(Frame):
             return
         if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
             success = self.main_ui.insert_number(self.row, self.col, int(event.char))
+            '''
             if(success):
                 self.game.puzzle[self.row][self.col] = int(event.char)
                 self.col, self.row = -1, -1
@@ -148,6 +149,7 @@ class SudokuUI(Frame):
                     self.__draw_victory()
             else:
                 self.col, self.row = -1, -1
+            '''
 
     def __clear_answers(self):
         self.game.start()
