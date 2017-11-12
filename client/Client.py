@@ -48,6 +48,7 @@ class Application():
         success = self.tryCreateConnection()
         if success:
             self.listener = ClientListener(self.socket, self)
+            self.send_nickname()
             self.get_games()
         else:
             tkMessageBox.showinfo("Error", "Error connecting to server")
@@ -71,15 +72,20 @@ class Application():
             self.master.destroy()
             return False
 
+    def send_nickname(self):
+        LOG.info("Sending nickname to server")
+        protocol.send(self.socket, NICKNAME_MSG, self.nickname)
+        LOG.info("Client is not expecting response for nickname message")
+
     def get_games(self):
         LOG.info("Requesting available games from server")
         protocol.send(self.socket, REQ_GAMES_MSG, "")
-        LOG.info("Waiting respnse for games request")
+        LOG.info("Waiting response for games request")
 
     def create_game(self):
         LOG.info("Requesting new game creation")
         protocol.send(self.socket, CREATE_GAME_MSG, "")
-        LOG.info("Waiting respnse for new game creation")
+        LOG.info("Waiting response for new game creation")
 
     def join_game(self, id):
         LOG.info("Requesting joining a game")

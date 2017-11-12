@@ -73,6 +73,7 @@ class NicknameView:
         nickname = self.entry.get()
         if self.validate_nickname(nickname):
             save_username(nickname)  # Save new username to file
+            self.main_ui.nickname = nickname
             print("Proceeding")
             self.main_ui.server_address_view()  # Show server screen
 
