@@ -66,4 +66,4 @@ class GameView:
             self.events_lb.insert(idx, val)
 
     def exit_game(self):
-        self.main_ui.main_view()
+        self.main_ui.get_games()
