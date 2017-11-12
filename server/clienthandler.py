@@ -89,7 +89,7 @@ class ClientHandler(Thread):
             LOG.debug("Client " + str(self.id) + " joined game " + str(game_id))
             protocol.send(self.client_socket, SUCCESSFUL_JOIN_MSG, "Successfully joined game.")
             self.send_new_board_state()
-            self.send_scores()
+            self.game.broadcast_scores()
         else:
             LOG.debug("Client could not join game with id " + str(game_id) + ". Game with that id does not exist.")
             protocol.send(self.client_socket, FAILED_JOIN_MSG, "Failed to join game.")
@@ -109,12 +109,12 @@ class ClientHandler(Thread):
             LOG.debug("Invalid insertion attempt of digit " + str(digit) + " into coordinates " +
                       str(row) + ":" + str(column))
             protocol.send(self.client_socket, FAILED_INS_MSG, "Insertion failed.")
-            self.send_scores()
+            self.game.broadcast_scores()
         else:
             LOG.debug("Successful insertion")
             protocol.send(self.client_socket, SUCCESSFUL_INS_MSG, "Insertion successful.")
             self.game.broadcast_new_state()
-            self.send_scores()
+            self.game.broadcast_scores()
 
     def send_new_board_state(self):
         """Send new board state to the client."""

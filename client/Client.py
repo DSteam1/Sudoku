@@ -83,7 +83,7 @@ class Application():
 
     def join_game(self, id):
         LOG.info("Requesting joining a game")
-        protocol.send(self.socket, JOIN_GAME_MSG, id)
+        protocol.send(self.socket, JOIN_GAME_MSG, str(id))
         LOG.info("Waiting response for join game")
 
     def game_view_prep(self, selected_game):

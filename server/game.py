@@ -53,6 +53,11 @@ class Game:
         for client in self.connected_clients:
             client.send_new_board_state()
 
+    def broadcast_scores(self):
+        LOG.debug("Sending scores to clients")
+        for client in self.connected_clients:
+            client.send_scores()
+
     def is_game_complete(self):
         complete = self.board.is_solved()
         return complete
