@@ -12,22 +12,22 @@ class Game:
         self.id = id
         self.board = board.Board()
         self.board.setup_board()
-        self.connected_clients = []
+        self.connected_clients = {}
         # Dictionary with keys being client id-s and values being the score values
         self.scores = {}
 
     def add_connected_client(self, client):
         """Add a client to the game."""
         self.scores[client.id] = 0
-        self.connected_clients.append(client)
+        self.connected_clients[client.id] = client
 
-    def remove_connected_client(self, client_index):
+    def remove_connected_client(self, client_id):
         """Remove a client from the game."""
-        index = self.connected_clients.pop(client_index)
-        LOG.debug("Removed client with index " + str(index) + " from game")
+        self.connected_clients.pop(client_id)
+        LOG.debug("Removed client with id " + str(client_id) + " from game")
 
     def get_connected_clients(self):
-        """Get the list of connected clients in the game."""
+        """Get the dictionary of connected clients in the game."""
         return self.connected_clients
 
     def update_board(self, row, column, digit, client_id):
@@ -50,12 +50,13 @@ class Game:
     def broadcast_new_state(self):
         """Send the new board state to all clients connected to this game instance."""
         LOG.debug("Sending new board states to clients")
-        for client in self.connected_clients:
+        for client in self.connected_clients.values():
             client.send_new_board_state()
 
     def broadcast_scores(self):
+        """Send the scores to all clients connected to this game instance."""
         LOG.debug("Sending scores to clients")
-        for client in self.connected_clients:
+        for client in self.connected_clients.values():
             client.send_scores()
 
     def is_game_complete(self):

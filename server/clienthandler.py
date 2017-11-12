@@ -18,6 +18,7 @@ class ClientHandler(Thread):
         Thread.__init__(self)
         self.server = server
         self.id = client_id
+        self.username = "player " + str(client_id)
         self.client_socket = client_socket
         self.client_address = client_address
         self.board = board.Board()
@@ -53,6 +54,9 @@ class ClientHandler(Thread):
                         if message_type == CREATE_GAME_MSG:
                             LOG.debug("Client is attempting to create a new game.")
                             self.handle_create_game()
+                        if message_type == NICKNAME_MSG:
+                            LOG.debug("Received username " + message_content + " from client.")
+                            self.handle_username(message_content)
                         if message_type == CLIENT_DISCONNECT_MSG:
                             LOG.debug("Client requested disconnection with message: " + message_content)
                             client_shutdown = True
@@ -77,7 +81,7 @@ class ClientHandler(Thread):
 
     def send_scores(self):
         """Send the current scores."""
-        content = protocol.assemble_send_scores_msg_content(self.game.scores)
+        content = protocol.assemble_send_scores_msg_content(self.game.scores, self.game.connected_clients)
         protocol.send(self.client_socket, SEND_SCORES_MSG, content)
 
     def handle_join_game(self, content):
@@ -100,6 +104,11 @@ class ClientHandler(Thread):
         self.game.add_connected_client(self)
         self.send_new_board_state()
         self.send_scores()
+
+    def handle_username(self, msg_content):
+        """Handle the client's request of determining its username."""
+        print(msg_content)
+        self.username = msg_content.strip()
 
     def handle_insert(self, msg_content):
         """Handle insertion event."""

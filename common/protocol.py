@@ -88,11 +88,12 @@ def assemble_board_state_msg_content(board):
     return content
 
 
-def assemble_send_scores_msg_content(scores):
+def assemble_send_scores_msg_content(scores, clients):
     """Assemble a message containing the current scores of players."""
     content = ""
-    for player in scores:
-        content += (str(player) + SCORE_PLAYER_SEPARATOR + str(scores[player]) + CONTENT_SEPARATOR)
+    for client_id in scores:
+        content += (clients[client_id].username + SCORE_PLAYER_SEPARATOR + str(scores[client_id]) +
+                    CONTENT_SEPARATOR)
     content = content[:-1]
     return content
 
@@ -101,7 +102,7 @@ def parse(message):
     """Parse a message."""
     message_parts = message.split(";")
     message_type = message_parts[0]
-    content = message_parts[1]
+    content = message_parts[1].strip()
     return message_type, content
 
 
