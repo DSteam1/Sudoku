@@ -81,6 +81,8 @@ class NicknameView:
 
     def fill_nickname(self, evt):
         w = evt.widget
+        if w.size() == 0:
+            return
         idx = int(w.curselection()[0])
         self.entry.delete(0, END)
         self.entry.insert(0, w.get(idx))
