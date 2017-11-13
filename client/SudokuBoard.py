@@ -96,7 +96,7 @@ class SudokuUI(Frame):
                 outline="DeepSkyBlue2", tags="cursor"
             )
 
-    def __draw_victory(self):
+    def draw_victory(self, content):
         # create a oval (which will be a circle)
         x0 = y0 = MARGIN + SIDE * 2
         x1 = y1 = MARGIN + SIDE * 7
@@ -108,7 +108,7 @@ class SudokuUI(Frame):
         x = y = MARGIN + 4 * SIDE + SIDE / 2
         self.canvas.create_text(
             x, y,
-            text="You win!", tags="victory",
+            text=content, tags="victory",
             fill="white", font=("Arial", 32)
         )
 

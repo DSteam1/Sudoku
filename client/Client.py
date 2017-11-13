@@ -1,5 +1,5 @@
-#from mtTkinter import *
-from Tkinter import *
+from mtTkinter import *
+#from Tkinter import *
 import logging
 import tkMessageBox
 from socket import AF_INET, SOCK_STREAM, socket, error
@@ -92,22 +92,15 @@ class Application():
         protocol.send(self.socket, REQ_GAMES_MSG, "")
         LOG.info("Waiting response for games request")
 
-    def create_game(self):
+    def create_game(self, players):
         LOG.info("Requesting new game creation")
-        protocol.send(self.socket, CREATE_GAME_MSG, "")
+        protocol.send(self.socket, CREATE_GAME_MSG, players)
         LOG.info("Waiting response for new game creation")
 
     def join_game(self, id):
         LOG.info("Requesting joining a game")
         protocol.send(self.socket, JOIN_GAME_MSG, str(id))
         LOG.info("Waiting response for join game")
-
-    def game_view_prep(self, selected_game):
-        if (selected_game == None):
-            self.create_game()
-        else:
-
-            self.join_game(selected_game)
 
     def insert_number(self, row, column, digit):
         LOG.info("Requesting number insertion")
@@ -151,6 +144,9 @@ class Application():
         self.existing_game_view = None
         self.get_games()
 
+    def show_end(self, content):
+        self.existing_game_view.show_end(content)
+
     def empty_frame(self, frame):
         for widget in frame.winfo_children():
             widget.destroy()
@@ -173,8 +169,6 @@ class ClientListener(Thread):
                     if msg:
                         self.parse_and_handle_message(msg)
                     else:
-                        print("received message")
-                        print(msg)
                         self.shut_down()
                         break
             except error:
@@ -198,6 +192,12 @@ class ClientListener(Thread):
         elif (message_type == SUCCESSFUL_INS_MSG):
             LOG.info("Handled response with type " + message_type + ": " + content)
         elif (message_type == FAILED_INS_MSG):
+            LOG.info("Handled response with type " + message_type + ": " + content)
+        elif (message_type == GAME_OVER_VICTORY_MSG):
+            self.app.show_end(content)
+            LOG.info("Handled response with type " + message_type + ": " + content)
+        elif (message_type == GAME_OVER_LOSS_MSG):
+            self.app.show_end(content)
             LOG.info("Handled response with type " + message_type + ": " + content)
         else:
             LOG.info("TODO: Handle response with type " + message_type)

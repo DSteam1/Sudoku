@@ -31,8 +31,8 @@ class GameView:
         self.games_lb.pack()
         self.fill_players(players)
 
-        games_txt = Label(self.frame_right, text="My score: 16", font=self.scoreFont)
-        games_txt.pack(pady=20)
+        #games_txt = Label(self.frame_right, text="My score: 16", font=self.scoreFont)
+        #games_txt.pack(pady=20)
 
         games_txt = Label(self.frame_right, text="", height=3)
         games_txt.pack()
@@ -53,6 +53,9 @@ class GameView:
         game.start()  # Start game
         self.UI.destroy()
         self.UI = SudokuUI(self.frame_left, game, self.main_ui)  # Display sudoku board
+
+    def show_end(self, content):
+        self.UI.draw_victory(content)
 
     def fill_players(self, players):
         self.games_lb.delete(0, END)

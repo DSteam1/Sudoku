@@ -53,20 +53,22 @@ class MainView:
         self.games_lb.pack()
 
     def connect(self):
-        selected_game = self.games_lb.curselection()
-        if len(selected_game) == 0:
+        selected_game_idx = self.games_lb.curselection()
+        selected_game = self.games_lb.get(selected_game_idx)
+        if len(selected_game_idx) == 0:
             tkMessageBox.showinfo("Error", "No game selected")
         elif "TODO" == "Connection failed":
             tkMessageBox.showinfo("Error", "Connection error")
         else:
             print("Connecting")
-            self.main_ui.game_view_prep(selected_game[0])
+            self.main_ui.join_game(selected_game)
 
     def create_new_game(self):
-        player_count = self.players_lb.curselection()
-        if len(player_count) == 0:
+        player_count_idx = self.players_lb.curselection()
+        player_count = self.players_lb.get(player_count_idx)
+        if len(player_count_idx) == 0:
             tkMessageBox.showinfo("Error", "Select the amount of players")
             return
         else:
-            self.main_ui.game_view_prep(None)
+            self.main_ui.create_game(player_count)
 
