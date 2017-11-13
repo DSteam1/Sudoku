@@ -18,7 +18,7 @@ class GameView:
 
         game = SudokuGame(board_string)
         game.start()  # Start game
-        SudokuUI(self.frame_left, game, main_ui)  # Display sudoku board
+        self.UI = SudokuUI(self.frame_left, game, main_ui)  # Display sudoku board
 
         self.frame_right = Frame(container)
         self.frame_right.pack(side=RIGHT, padx=20, pady=10)
@@ -48,7 +48,14 @@ class GameView:
         self.enterButton = Button(self.frame_right, text="Exit game", command=self.exit_game)
         self.enterButton.pack( padx=10, pady=10)
 
+    def update_board(self, board):
+        game = SudokuGame(board)
+        game.start()  # Start game
+        self.UI.destroy()
+        self.UI = SudokuUI(self.frame_left, game, self.main_ui)  # Display sudoku board
+
     def fill_players(self, players):
+        self.games_lb.delete(0, END)
         for idx, val in enumerate(players):  # Insert all games to the list
             self.games_lb.insert(idx, val)
         self.games_lb.pack()

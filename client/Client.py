@@ -32,6 +32,7 @@ class Application():
 
         self.board_name = "debug"
         #  self.board_name = "n00b"
+        self.existing_game_view = None
 
         self.nickname_view()  # Show nickname initially
         #  self.game_view()  # Replace for debugging
@@ -123,10 +124,19 @@ class Application():
         self.empty_frame(self.frame_container)
         MV.MainView(self.frame_container, self, games)
 
-    def game_view(self, game, scores):
+    def game_view(self, game = "", scores = ""):
         self.window_resize(_GAME_WIDTH, _GAME_HEIGHT)
         self.empty_frame(self.frame_container)
-        GV.GameView(self.frame_container, self, game, scores)
+        self.existing_game_view = GV.GameView(self.frame_container, self, game, scores)
+
+    def update_game_view(self, game, scores):
+        if(self.existing_game_view == None):
+            self.game_view(game, scores)
+        else:
+            if(game != ""):
+                self.existing_game_view.update_board(game)
+            if(scores != ""):
+                self.existing_game_view.fill_players(scores)
 
     def empty_frame(self, frame):
         for widget in frame.winfo_children():
@@ -164,12 +174,11 @@ class ClientListener(Thread):
             LOG.info("Handled response with type " + message_type)
         elif(message_type == BOARD_STATE_MSG):
             digits, types = protocol.separate_board_state_msg_content(content)
-            self.current_digits = digits
-            #self.app.game_view(self.current_digits, self.current_scores)
+            self.app.update_game_view(digits, "")
             LOG.info("Handled response with type " + message_type)
         elif(message_type == SEND_SCORES_MSG):
-            self.current_scores = protocol.parse_score_message(content)
-            self.app.game_view(self.current_digits, self.current_scores)
+            scores = protocol.parse_score_message(content)
+            self.app.update_game_view("", scores)
             LOG.info("Handled response with type " + message_type)
         elif (message_type == SUCCESSFUL_INS_MSG):
             LOG.info("Handled response with type " + message_type + ": " + content)
