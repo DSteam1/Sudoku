@@ -1,7 +1,10 @@
 from SudokuBoard import *
 from Tkinter import Tk, Canvas, Frame, Button, BOTH, TOP, BOTTOM, LEFT, RIGHT, END,  Label, CENTER, Listbox, Entry
 import tkMessageBox
+import os
+import sys
 
+USERNAMES_FILE = "usernames.txt"
 
 class ServerAddressView:
 
@@ -93,10 +96,41 @@ class NicknameView:
             return False
         return True
 
+
+def get_dir():
+    return os.path.dirname(os.path.realpath(sys.argv[0]))
+
+
 def read_usernames():
-    # TODO: Username reading from file
-    return ["evelknievel", "user1", "dima"]
+    try:
+        file_path = get_dir() + '/' + USERNAMES_FILE
+        if not os.path.exists(file_path):
+            return []  # No such file
+        un = []
+        with open(file_path, 'r') as f:
+            for i in range(10):  # Read max 10 lines
+                line = str.strip(f.readline())
+                if line == "":
+                    break
+                un.append(line[:8])  # Append 8 first characters of a line
+            f.close()
+        return un
+    except Exception as ex:
+        print("Error reading from file:", ex)
+        return []
+
 
 def save_username(username):
-    # TODO: Appending username to file if not added
-    pass
+    try:
+        usernames = read_usernames()  # Read usernames currently in file
+        if username in usernames:
+            usernames.remove(username)  # Remove current username
+        usernames.insert(0, username)  # Append to start
+
+        file_path = get_dir() + '/' + USERNAMES_FILE
+        with open(file_path, 'w') as f:
+            for un in usernames:  # Write usernames to file
+                f.write(un[:8] + "\n")
+            f.close()
+    except Exception as ex:
+        print("Error writing to file:", ex)
