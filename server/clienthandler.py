@@ -53,7 +53,7 @@ class ClientHandler(Thread):
                             self.handle_join_game(message_content)
                         if message_type == CREATE_GAME_MSG:
                             LOG.debug("Client is attempting to create a new game.")
-                            self.handle_create_game()
+                            self.handle_create_game(message_content)
                         if message_type == NICKNAME_MSG:
                             LOG.debug("Received username " + message_content + " from client.")
                             self.handle_username(message_content)
@@ -92,15 +92,16 @@ class ClientHandler(Thread):
             self.game.add_connected_client(self)
             LOG.debug("Client " + str(self.id) + " joined game " + str(game_id))
             protocol.send(self.client_socket, SUCCESSFUL_JOIN_MSG, "Successfully joined game.")
+            self.game.start_game_if_enough_players()
             self.send_new_board_state()
             self.game.broadcast_scores()
         else:
             LOG.debug("Client could not join game with id " + str(game_id) + ". Game with that id does not exist.")
             protocol.send(self.client_socket, FAILED_JOIN_MSG, "Failed to join game.")
 
-    def handle_create_game(self):
+    def handle_create_game(self, needed_players):
         """Handle game creation request."""
-        self.game = self.server.create_game()
+        self.game = self.server.create_game(needed_players)
         self.game.add_connected_client(self)
         self.send_new_board_state()
         self.send_scores()
@@ -113,6 +114,12 @@ class ClientHandler(Thread):
 
     def handle_insert(self, msg_content):
         """Handle insertion event."""
+        if not self.game.has_started:
+            # This should generally not be reached
+            LOG.debug("The game has not started yet, more players are needed before numbers can be inserted.")
+            protocol.send(self.client_socket, FAILED_INS_MSG,
+                          "Insertion failed due to game not having been started yet. Please wait for more players.")
+            return
         row, column, digit = protocol.parse_insert_msg_content(msg_content)
         score_change = self.game.update_board(row, column, digit, self.id)
         if not score_change or score_change < 1:

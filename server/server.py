@@ -41,9 +41,9 @@ class Server:
             LOG.debug("Disconnecting all clients.")
             self.disconnect()
 
-    def create_game(self):
+    def create_game(self, needed_players):
         """Create a new game instance."""
-        game = Game(self.latest_game_id, self)
+        game = Game(self.latest_game_id, self, needed_players)
         self.games[self.latest_game_id] = game
         self.latest_game_id += 1
         return game

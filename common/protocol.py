@@ -29,7 +29,7 @@ Join game request message
 JOIN_GAME_MSG + SEPARATOR + game_id
 
 Create game request message
-CREATE_GAME_MSG + SEPARATOR + ?
+CREATE_GAME_MSG + SEPARATOR + needed_player_count
 
 Score sending message
 SEND_SCORES_MSG + SEPARATOR + (client_id + SCORE_PLAYER_SEPARATOR + client_score + CONTENT_SEPARATOR) + (client_id + ...
@@ -48,6 +48,24 @@ SUCCESSFUL_INS_MSG + SEPARATOR + some_string
 
 Failed insert message
 FAILED_INS_MSG + SEPARATOR + some_string
+
+Nickname message
+NICKNAME_MSG + SEPARATOR + nickname
+
+OK message
+OK_MSG + SEPARATOR + some_string
+
+NOT OK message
+NOT_OK_MSG + SEPARATOR + some_string
+
+Victory message
+GAME_OVER_VICTORY_MSG + SEPARATOR + victory_message_contents
+
+Game lost message
+GAME_OVER_LOSS_MSG + SEPARATOR + game_lost_message_contents
+
+Start game message
+START_GAME_MSG + SEPARATOR + some_string
 """
 
 

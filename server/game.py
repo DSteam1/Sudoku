@@ -10,7 +10,7 @@ class Game:
     """
     Instance of a sudoku game on the server side
     """
-    def __init__(self, id, server):
+    def __init__(self, id, server, needed_players):
         self.id = id
         self.server = server
         self.board = board.Board()
@@ -18,6 +18,8 @@ class Game:
         self.connected_clients = {}
         # Dictionary with keys being client id-s and values being the score values
         self.scores = {}
+        self.needed_players = needed_players
+        self.has_started = False
 
     def add_connected_client(self, client):
         """Add a client to the game."""
@@ -86,3 +88,10 @@ class Game:
         """End the game."""
         LOG.debug("Terminating game.")
         self.server.end_game(self.id)
+
+    def start_game_if_enough_players(self):
+        if len(self.connected_clients) >= int(self.needed_players):
+            LOG.debug("Starting the game since enough players have joined. Sending start game messages to all players.")
+            self.has_started = True
+            for client in self.connected_clients.values():
+                protocol.send(client.client_socket, START_GAME_MSG, "")
