@@ -1,8 +1,7 @@
 from SudokuBoard import *
 from Tkinter import Tk, Canvas, Frame, Button, BOTH, TOP, BOTTOM, LEFT, RIGHT, END,  Label, CENTER, Listbox, Entry
 import tkMessageBox
-import os
-import sys
+import os, sys, re
 
 USERNAMES_FILE = "usernames.txt"
 
@@ -87,12 +86,15 @@ class NicknameView:
         self.entry.insert(0, w.get(idx))
 
     def validate_nickname(self, nickname):
-        # TODO: Username validation, spaces are not allowed!!
+        validation = re.findall("^[a-zA-Z0-9]*$", nickname)
         if len(nickname) == 0:
-            tkMessageBox.showinfo("Error", "Too short nickname")
+            tkMessageBox.showinfo("Error", "Nickname must be at least 1 character long")
             return False
         elif len(nickname) > 8:
-            tkMessageBox.showinfo("Error", "Too long nickname")
+            tkMessageBox.showinfo("Error", "Nickname must be 8 characters or shorter")
+            return False
+        elif len(validation) == 0 or (len(validation) > 0 and validation[0] != nickname):
+            tkMessageBox.showinfo("Error", "Only alphanumeric characters allowed")
             return False
         return True
 
