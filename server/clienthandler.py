@@ -57,9 +57,9 @@ class ClientHandler(Thread):
                         if message_type == NICKNAME_MSG:
                             LOG.debug("Received username " + message_content + " from client.")
                             self.handle_username(message_content)
-                        if message_type == CLIENT_DISCONNECT_MSG:
-                            LOG.debug("Client requested disconnection with message: " + message_content)
-                            client_shutdown = True
+                        #if message_type == EXIT_GAME_MSG:
+                        #    LOG.debug("Client is exiting from the game.")
+                        #    self.handle_exit_game()
                     else:
                         LOG.debug("Client terminated connection")
                         client_shutdown = True
@@ -136,6 +136,10 @@ class ClientHandler(Thread):
                 self.game.notify_clients_of_game_completion()
                 self.game.terminate_game()
 
+    def handle_exit_game(self):
+        self.game.remove_connected_client(self.id)
+        self.game = None
+
     def send_new_board_state(self):
         """Send new board state to the client."""
         content = protocol.assemble_board_state_msg_content(self.game.board)
@@ -155,5 +159,6 @@ class ClientHandler(Thread):
     def disconnect(self):
         """Disconnect the client."""
         self.game.remove_connected_client(self.id)
+        self.game = None
         self.client_socket.close()
         LOG.debug("Terminating client %s:%d" % self.client_address)

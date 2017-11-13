@@ -2,6 +2,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 
 from clienthandler import *
 from game import *
+from common.utils import *
 
 
 class Server:
@@ -58,5 +59,5 @@ class Server:
 
 
 LOG = init_logging()
-
-Server(('127.0.0.1', 7777))
+address, port = get_server_address_and_port()
+Server((address, port))
