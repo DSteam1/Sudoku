@@ -35,7 +35,7 @@ class Board:
             
             #Set some cells user changeable
             nr_of_changes = 0
-            max_changes = 15
+            max_changes = 3
             while nr_of_changes < max_changes:
                 ix = random.randint(0,8)
                 iy = random.randint(0,8)

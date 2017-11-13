@@ -42,11 +42,15 @@ class Server:
             self.disconnect()
 
     def create_game(self):
-        """Create a new game instance"""
-        game = Game(self.latest_game_id)
+        """Create a new game instance."""
+        game = Game(self.latest_game_id, self)
         self.games[self.latest_game_id] = game
         self.latest_game_id += 1
         return game
+
+    def end_game(self, game_id):
+        """End a game instance."""
+        self.games.pop(game_id)
 
     def disconnect(self):
         """Close the socket."""

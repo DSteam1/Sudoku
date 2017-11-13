@@ -1,5 +1,7 @@
 import sudoku.board as board
+import common.protocol as protocol
 from common.utils import init_logging
+from common.constants import *
 
 LOG = init_logging()
 
@@ -8,8 +10,9 @@ class Game:
     """
     Instance of a sudoku game on the server side
     """
-    def __init__(self, id):
+    def __init__(self, id, server):
         self.id = id
+        self.server = server
         self.board = board.Board()
         self.board.setup_board()
         self.connected_clients = {}
@@ -24,6 +27,7 @@ class Game:
     def remove_connected_client(self, client_id):
         """Remove a client from the game."""
         self.connected_clients.pop(client_id)
+        self.scores.pop(client_id)
         LOG.debug("Removed client with id " + str(client_id) + " from game")
 
     def get_connected_clients(self):
@@ -39,6 +43,20 @@ class Game:
         else:
             LOG.debug("Score of client with id " + str(client_id) + " could not be updated.")
         return score_change
+
+    def notify_clients_of_game_completion(self):
+        """Send victory/game over messages to all players."""
+        LOG.debug("Game is complete. Sending game over messages to clients.")
+        winning_client_id = max(self.scores, key=self.scores.get)
+        winning_client = self.connected_clients[winning_client_id]
+        winning_client_username = winning_client.username
+        protocol.send(winning_client.client_socket, GAME_OVER_VICTORY_MSG, "You win!")
+        for client in self.connected_clients.values():
+            if client.id == winning_client_id:
+                continue
+            else:
+                protocol.send(client.client_socket, GAME_OVER_LOSS_MSG,
+                              winning_client_username + " wins!")
 
     def get_score(self, client_id):
         return self.scores[client_id]
@@ -60,5 +78,11 @@ class Game:
             client.send_scores()
 
     def is_game_complete(self):
+        """Check whether the game is complete."""
         complete = self.board.is_solved()
         return complete
+
+    def terminate_game(self):
+        """End the game."""
+        LOG.debug("Terminating game.")
+        self.server.end_game(self.id)

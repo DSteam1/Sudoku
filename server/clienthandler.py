@@ -109,6 +109,7 @@ class ClientHandler(Thread):
         """Handle the client's request of determining its username."""
         print(msg_content)
         self.username = msg_content.strip()
+        self.send_rsp_ok()
 
     def handle_insert(self, msg_content):
         """Handle insertion event."""
@@ -124,11 +125,25 @@ class ClientHandler(Thread):
             protocol.send(self.client_socket, SUCCESSFUL_INS_MSG, "Insertion successful.")
             self.game.broadcast_new_state()
             self.game.broadcast_scores()
+            if self.game.is_game_complete():
+                self.game.notify_clients_of_game_completion()
+                self.game.terminate_game()
 
     def send_new_board_state(self):
         """Send new board state to the client."""
         content = protocol.assemble_board_state_msg_content(self.game.board)
         protocol.send(self.client_socket, BOARD_STATE_MSG, content)
+
+    def send_rsp_ok(self):
+        """Send an empty response with the message type OK to signal that the request was processed successfully."""
+        protocol.send(self.client_socket, OK_MSG, "")
+
+    def send_rsp_not_ok(self, error_message):
+        """
+        Send a response with the message type NOT OK to signal that the request was processed unsuccessfully.
+        An error message can be attached as the message content.
+        """
+        protocol.send(self.client_socket, NOT_OK_MSG, error_message)
 
     def disconnect(self):
         """Disconnect the client."""
