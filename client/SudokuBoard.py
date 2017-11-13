@@ -75,16 +75,14 @@ class SudokuUI(Frame):
         for i in xrange(9):
             for j in xrange(9):
                 answer = self.game.puzzle[i][j]
+                can_edit = self.game.heatmap[i][j] == 2
+                x = MARGIN + j * SIDE + SIDE / 2
+                y = MARGIN + i * SIDE + SIDE / 2
                 if answer != 0:
-                    x = MARGIN + j * SIDE + SIDE / 2
-                    y = MARGIN + i * SIDE + SIDE / 2
-                    original = self.game.start_puzzle[i][j]
-                    color = "black" if answer == original else "sea green"
+                    color = "sea green" if can_edit else "black"
                     self.canvas.create_text(
                         x, y, text=answer, tags="numbers", fill=color,
                         font=self.boardFont)
-
-
 
     def __draw_cursor(self):
         self.canvas.delete("cursor")
@@ -127,7 +125,7 @@ class SudokuUI(Frame):
             # if cell was selected already - deselect it
             if (row, col) == (self.row, self.col):
                 self.row, self.col = -1, -1
-            elif self.game.puzzle[row][col] == 0:
+            elif self.game.heatmap[row][col] == 2:
                 self.row, self.col = row, col
         else:
             self.row, self.col = -1, -1
@@ -138,7 +136,7 @@ class SudokuUI(Frame):
         if self.game.game_over:
             return
         if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
-            success = self.main_ui.insert_number(self.row, self.col, int(event.char))
+            self.main_ui.insert_number(self.row, self.col, int(event.char))
             '''
             if(success):
                 self.game.puzzle[self.row][self.col] = int(event.char)
@@ -212,9 +210,10 @@ class SudokuGame(object):
     A Sudoku game, in charge of storing the state of the board and checking
     whether the puzzle is completed.
     """
-    def __init__(self, board_string):
+    def __init__(self, board_string, heatmap):
         self.board_file = board_string
         self.start_puzzle = SudokuBoard(board_string).board
+        self.heatmap = SudokuBoard(heatmap).board
 
     def start(self):
         self.game_over = False

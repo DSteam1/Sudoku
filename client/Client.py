@@ -1,3 +1,4 @@
+#from mtTkinter import *
 from Tkinter import *
 import logging
 import tkMessageBox
@@ -54,6 +55,14 @@ class Application():
         else:
             tkMessageBox.showinfo("Error", "Error connecting to server")
             self.count += 1
+
+    def disconnect(self):
+        try:
+            self.socket.fileno()
+        except:
+            return
+        LOG.info("Disconnected from server.")
+        self.socket.close()
 
     def tryCreateConnection(self):
         LOG.info("Connecting to %s." % self.server)
@@ -124,19 +133,23 @@ class Application():
         self.empty_frame(self.frame_container)
         MV.MainView(self.frame_container, self, games)
 
-    def game_view(self, game = "", scores = ""):
+    def game_view(self, digitsTypes = "", scores = ""):
         self.window_resize(_GAME_WIDTH, _GAME_HEIGHT)
         self.empty_frame(self.frame_container)
-        self.existing_game_view = GV.GameView(self.frame_container, self, game, scores)
+        self.existing_game_view = GV.GameView(self.frame_container, self, digitsTypes, scores)
 
-    def update_game_view(self, game, scores):
+    def update_game_view(self, digitsTypes, scores):
         if(self.existing_game_view == None):
-            self.game_view(game, scores)
+            self.game_view(digitsTypes, scores)
         else:
-            if(game != ""):
-                self.existing_game_view.update_board(game)
+            if(digitsTypes != ""):
+                self.existing_game_view.update_board(digitsTypes)
             if(scores != ""):
                 self.existing_game_view.fill_players(scores)
+
+    def exit_game(self):
+        self.existing_game_view = None
+        self.get_games()
 
     def empty_frame(self, frame):
         for widget in frame.winfo_children():
@@ -160,6 +173,8 @@ class ClientListener(Thread):
                     if msg:
                         self.parse_and_handle_message(msg)
                     else:
+                        print("received message")
+                        print(msg)
                         self.shut_down()
                         break
             except error:
@@ -174,7 +189,7 @@ class ClientListener(Thread):
             LOG.info("Handled response with type " + message_type)
         elif(message_type == BOARD_STATE_MSG):
             digits, types = protocol.separate_board_state_msg_content(content)
-            self.app.update_game_view(digits, "")
+            self.app.update_game_view((digits, types), "")
             LOG.info("Handled response with type " + message_type)
         elif(message_type == SEND_SCORES_MSG):
             scores = protocol.parse_score_message(content)
@@ -188,6 +203,9 @@ class ClientListener(Thread):
             LOG.info("TODO: Handle response with type " + message_type)
             # TODO: HANDLE PROBLEMS
             pass
+
+    def shut_down(self):
+        self.app.disconnect()
 
 
 

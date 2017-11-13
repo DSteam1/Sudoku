@@ -8,7 +8,7 @@ _GAME_HEIGHT = 600
 _GAME_WIDTH = 800
 
 class GameView:
-    def __init__(self, container, main_ui, board_string, players):
+    def __init__(self, container, main_ui, digitsTypes, players):
         self.main_ui = main_ui
 
         self.frame_left = Frame(container)
@@ -16,7 +16,7 @@ class GameView:
 
         self.scoreFont = tkFont.Font(family="Helvetica", size=15)
 
-        game = SudokuGame(board_string)
+        game = SudokuGame(digitsTypes[0], digitsTypes[1])
         game.start()  # Start game
         self.UI = SudokuUI(self.frame_left, game, main_ui)  # Display sudoku board
 
@@ -48,8 +48,8 @@ class GameView:
         self.enterButton = Button(self.frame_right, text="Exit game", command=self.exit_game)
         self.enterButton.pack( padx=10, pady=10)
 
-    def update_board(self, board):
-        game = SudokuGame(board)
+    def update_board(self, digitsTypes):
+        game = SudokuGame(digitsTypes[0], digitsTypes[1])
         game.start()  # Start game
         self.UI.destroy()
         self.UI = SudokuUI(self.frame_left, game, self.main_ui)  # Display sudoku board
@@ -73,4 +73,4 @@ class GameView:
             self.events_lb.insert(idx, val)
 
     def exit_game(self):
-        self.main_ui.get_games()
+        self.main_ui.exit_game()
