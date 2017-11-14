@@ -57,9 +57,9 @@ class ClientHandler(Thread):
                         if message_type == NICKNAME_MSG:
                             LOG.debug("Received username " + message_content + " from client.")
                             self.handle_username(message_content)
-                        #if message_type == EXIT_GAME_MSG:
-                        #    LOG.debug("Client is exiting from the game.")
-                        #    self.handle_exit_game()
+                        if message_type == EXIT_GAME_MSG:
+                            LOG.debug("Client is exiting from the game.")
+                            self.handle_exit_game()
                     else:
                         LOG.debug("Client terminated connection")
                         client_shutdown = True
@@ -90,14 +90,13 @@ class ClientHandler(Thread):
         if game_id in self.server.games.keys():
             game = self.server.games[game_id]
             clients = game.get_connected_clients()
-
+            # If game is full, send appropriate message
             if int(game.needed_players) < len(clients) + 1 and self.id not in clients:
                 LOG.debug("Client " + str(self.id) + " tried to join full game  " + str(game_id))
                 protocol.send(self.client_socket, GAME_FULL_MSG, "Game already full.")
                 return
-
             self.game = game
-            self.server.remove_client_from_games_except(self, game)  # Remove client from all previously played games
+            self.server.remove_client_from_games_except(self, game)  # Remove client from all other games
             self.game.add_connected_client(self)
             LOG.debug("Client " + str(self.id) + " joined game " + str(game_id))
             protocol.send(self.client_socket, SUCCESSFUL_JOIN_MSG, "Successfully joined game.")
@@ -148,6 +147,10 @@ class ClientHandler(Thread):
 
     def handle_exit_game(self):
         self.game.remove_connected_client(self.id)
+        if len(self.game.connected_clients) == 0:
+            self.server.end_game(self.game.id)
+        else:
+            self.game.broadcast_scores()
         self.game = None
 
     def send_new_board_state(self):

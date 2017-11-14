@@ -59,7 +59,8 @@ class Server:
 
     def end_game(self, game_id):
         """End a game instance."""
-        self.games.pop(game_id)
+        if game_id in self.games:
+            self.games.pop(game_id)
 
     def disconnect(self):
         """Close the socket."""
