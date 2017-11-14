@@ -28,6 +28,8 @@ class Game:
 
     def remove_connected_client(self, client_id):
         """Remove a client from the game."""
+        if client_id not in self.connected_clients:
+            return
         self.connected_clients.pop(client_id)
         self.scores.pop(client_id)
         LOG.debug("Removed client with id " + str(client_id) + " from game")

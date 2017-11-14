@@ -88,7 +88,16 @@ class ClientHandler(Thread):
         """Handle game join request."""
         game_id = int(content)
         if game_id in self.server.games.keys():
-            self.game = self.server.games[game_id]
+            game = self.server.games[game_id]
+            clients = game.get_connected_clients()
+
+            if int(game.needed_players) < len(clients) + 1 and self.id not in clients:
+                LOG.debug("Client " + str(self.id) + " tried to join full game  " + str(game_id))
+                protocol.send(self.client_socket, GAME_FULL_MSG, "Game already full.")
+                return
+
+            self.game = game
+            self.server.remove_client_from_games_except(self, game)  # Remove client from all previously played games
             self.game.add_connected_client(self)
             LOG.debug("Client " + str(self.id) + " joined game " + str(game_id))
             protocol.send(self.client_socket, SUCCESSFUL_JOIN_MSG, "Successfully joined game.")
@@ -102,6 +111,7 @@ class ClientHandler(Thread):
     def handle_create_game(self, needed_players):
         """Handle game creation request."""
         self.game = self.server.create_game(needed_players)
+        self.server.remove_client_from_games_except(self, self.game)
         self.game.add_connected_client(self)
         self.send_new_board_state()
         self.send_scores()

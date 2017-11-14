@@ -49,6 +49,14 @@ class Server:
         self.latest_game_id += 1
         return game
 
+    def remove_client_from_games_except(self, client, exclude_game):
+        """Remove client from all games."""
+        dict = self.games.copy()  # Avoid changed during iteration error
+        for game in dict:
+            if game in self.games:
+                if client.id in self.games[game].connected_clients and exclude_game != self.games[game]:
+                    self.games[game].remove_connected_client(client.id)
+
     def end_game(self, game_id):
         """End a game instance."""
         self.games.pop(game_id)

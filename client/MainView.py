@@ -76,3 +76,10 @@ class MainView:
             self.main_ui.game_open = True
             self.main_ui.create_game(player_count)
 
+    def display_join_fault(self):
+        tkMessageBox.showinfo("Error", "Couldn't join game")
+        self.main_ui.get_games()
+
+    def display_game_full(self):
+        tkMessageBox.showinfo("Error", "Game already full")
+        self.main_ui.get_games()

@@ -130,6 +130,14 @@ class Application():
             self.existing_main_view.games = games
             self.existing_main_view.fill_games()
 
+    def game_join_fault(self):
+        if self.existing_main_view is not None:
+            self.existing_main_view.display_join_fault()
+
+    def game_full_fault(self):
+        if self.existing_main_view is not None:
+            self.existing_main_view.display_game_full()
+
     def game_view(self, digitsTypes = "", scores = ""):
         self.window_resize(_GAME_WIDTH, _GAME_HEIGHT)
         self.empty_frame(self.frame_container)
@@ -218,13 +226,17 @@ class ClientListener(Thread):
             LOG.info("Handled response with type " + message_type + ": " + content)
         elif message_type == GAME_OVER_VICTORY_MSG:
             if self.app.game_open:
-                print(content)
                 self.app.show_end(content)
             LOG.info("Handled response with type " + message_type + ": " + content)
         elif message_type == GAME_OVER_LOSS_MSG:
             if self.app.game_open:
-                print(content)
                 self.app.show_end(content)
+            LOG.info("Handled response with type " + message_type + ": " + content)
+        elif message_type == FAILED_JOIN_MSG:
+            self.app.game_join_fault()
+            LOG.info("Handled response with type " + message_type + ": " + content)
+        elif message_type == GAME_FULL_MSG:
+            self.app.game_full_fault()
             LOG.info("Handled response with type " + message_type + ": " + content)
         else:
             LOG.info("Unknown message with type " + message_type)
