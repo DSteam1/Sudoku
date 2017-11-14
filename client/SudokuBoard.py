@@ -1,9 +1,8 @@
-# Sudoku implementation from http://newcoder.io/gui/intro/
+# Basic Sudoku implementation from http://newcoder.io/gui/intro/
 
 from Tkinter import Tk, Canvas, Frame, Button, BOTH, TOP, BOTTOM
 import tkFont
 
-BOARDS = ['debug', 'n00b', 'l33t', 'error']  # Available sudoku boards
 MARGIN = 10  # Pixels around the board
 SIDE = 50  # Width of every board cell.
 WIDTH = HEIGHT = MARGIN * 2 + SIDE * 9  # Width and height of the whole board
@@ -33,17 +32,15 @@ class SudokuUI(Frame):
 
 
     def __initUI(self):
-        #self.parent.title("Sudoku")
+        """
+        Initialises the Sudoku board
+        """
         self.pack(fill=BOTH)
         self.canvas = Canvas(self,
                              width=WIDTH,
                              height=HEIGHT,
                              highlightthickness=0)
         self.canvas.pack(fill=BOTH, side=TOP)
-        clear_button = Button(self,
-                              text="Clear answers",
-                              command=self.__clear_answers)
-        clear_button.pack(fill=BOTH, side=BOTTOM)
 
         self.__draw_grid()
         self.__draw_puzzle()
@@ -71,6 +68,9 @@ class SudokuUI(Frame):
             self.canvas.create_line(x0, y0, x1, y1, fill=color)
 
     def __draw_puzzle(self):
+        """
+        Deletes all the numbers and draws them from scratch
+        """
         self.canvas.delete("numbers")
         for i in xrange(9):
             for j in xrange(9):
@@ -85,6 +85,9 @@ class SudokuUI(Frame):
                         font=self.boardFont)
 
     def __draw_cursor(self):
+        """
+        Hides the highlighted border of a the selected square
+        """
         self.canvas.delete("cursor")
         if self.row >= 0 and self.col >= 0:
             x0 = MARGIN + self.col * SIDE + 1
@@ -97,7 +100,9 @@ class SudokuUI(Frame):
             )
 
     def draw_victory(self, content):
-        # create a oval (which will be a circle)
+        """
+        Draws the circle containing the result of the game
+        """
         x0 = y0 = MARGIN + SIDE * 2
         x1 = y1 = MARGIN + SIDE * 7
         self.canvas.create_oval(
@@ -113,10 +118,13 @@ class SudokuUI(Frame):
         )
 
     def __cell_clicked(self, event):
+        """
+        Handles cell clicking
+        """
         if self.game.game_over:
             return
         x, y = event.x, event.y
-        if (MARGIN < x < WIDTH - MARGIN and MARGIN < y < HEIGHT - MARGIN):
+        if MARGIN < x < WIDTH - MARGIN and MARGIN < y < HEIGHT - MARGIN:
             self.canvas.focus_set()
 
             # get row and col numbers from x,y coordinates
@@ -133,21 +141,13 @@ class SudokuUI(Frame):
         self.__draw_cursor()
 
     def __key_pressed(self, event):
+        """
+        Handles key-presses
+        """
         if self.game.game_over:
             return
-        if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
+        if self.row >= 0 and self.col >= 0 and event.char in "1234567890" and event.char != "":
             self.main_ui.insert_number(self.row, self.col, int(event.char))
-            '''
-            if(success):
-                self.game.puzzle[self.row][self.col] = int(event.char)
-                self.col, self.row = -1, -1
-                self.__draw_puzzle()
-                self.__draw_cursor()
-                if self.game.check_win():
-                    self.__draw_victory()
-            else:
-                self.col, self.row = -1, -1
-            '''
 
     def __clear_answers(self):
         self.game.start()
@@ -164,27 +164,6 @@ class SudokuBoard(object):
 
     def __create_board(self, board_string):
         board = []
-        '''
-        for line in board_file:
-            line = line.strip()
-            if len(line) != 9:
-                raise SudokuError(
-                    "Each line in the sudoku puzzle must be 9 chars long."
-                )
-            board.append([])
-
-            for c in line:
-                if not c.isdigit():
-                    raise SudokuError(
-                        "Valid characters for a sudoku puzzle must be in 0-9"
-                    )
-                board[-1].append(int(c))
-        print(board)
-
-        if len(board) != 9:
-            raise SudokuError("Each sudoku puzzle must be 9 lines long")
-        '''
-
         nrs = board_string.split(',')
         line = []
         for n in nrs:
@@ -222,38 +201,3 @@ class SudokuGame(object):
             self.puzzle.append([])
             for j in xrange(9):
                 self.puzzle[i].append(self.start_puzzle[i][j])
-
-    def check_win(self):
-        for row in xrange(9):
-            if not self.__check_row(row):
-                return False
-        for column in xrange(9):
-            if not self.__check_column(column):
-                return False
-        for row in xrange(3):
-            for column in xrange(3):
-                if not self.__check_square(row, column):
-                    return False
-        self.game_over = True
-        return True
-
-    def __check_block(self, block):
-        return set(block) == set(range(1, 10))
-
-    def __check_row(self, row):
-        return self.__check_block(self.puzzle[row])
-
-    def __check_column(self, column):
-        return self.__check_block(
-            [self.puzzle[row][column] for row in xrange(9)]
-        )
-
-    def __check_square(self, row, column):
-        return self.__check_block(
-            [
-                self.puzzle[r][c]
-                for r in xrange(row * 3, (row + 1) * 3)
-                for c in xrange(column * 3, (column + 1) * 3)
-            ]
-        )
-

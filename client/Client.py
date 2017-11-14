@@ -1,10 +1,6 @@
 from mtTkinter import *
-#from Tkinter import *
-import logging
 import tkMessageBox
 from socket import AF_INET, SOCK_STREAM, socket, error
-from socket import error as socket_error
-from argparse import ArgumentParser
 import OtherViews as OV
 import MainView as MV
 import GameView as GV
@@ -31,12 +27,10 @@ class Application():
         self.frame_container = Frame(self.root)
         self.frame_container.place(relx=0.5, rely=0.5, anchor=CENTER)
 
-        self.board_name = "debug"
-        #  self.board_name = "n00b"
         self.existing_game_view = None
+        self.game_started = False
 
         self.nickname_view()  # Show nickname initially
-        #  self.game_view()  # Replace for debugging
 
         self.root.mainloop()
 
@@ -44,8 +38,7 @@ class Application():
         self.exit_game()
         self.disconnect()
 
-        # Connect to server
-
+    # Connect to server
     def connect(self):
         success = self.tryCreateConnection()
         if success:
@@ -129,16 +122,21 @@ class Application():
     def game_view(self, digitsTypes = "", scores = ""):
         self.window_resize(_GAME_WIDTH, _GAME_HEIGHT)
         self.empty_frame(self.frame_container)
-        self.existing_game_view = GV.GameView(self.frame_container, self, digitsTypes, scores)
+        self.existing_game_view = GV.GameView(self.frame_container, self, digitsTypes, scores, self.game_started)
 
     def update_game_view(self, digitsTypes, scores):
-        if(self.existing_game_view == None):
+        if self.existing_game_view is None:
             self.game_view(digitsTypes, scores)
         else:
-            if(digitsTypes != ""):
+            if digitsTypes != "" :
                 self.existing_game_view.update_board(digitsTypes)
-            if(scores != ""):
+            if scores != "":
                 self.existing_game_view.fill_players(scores)
+
+    def start_game(self):
+        self.game_started = True
+        if self.existing_game_view is not None:
+            self.existing_game_view.hide_waiting_txt()
 
     def exit_game(self):
         LOG.info("Sending exit game message")
@@ -156,6 +154,7 @@ class Application():
 
     def window_resize(self, width, height):
         self.root.minsize(width=width, height=height)
+
 
 class ClientListener(Thread):
     def __init__(self, socket, app):
@@ -180,31 +179,36 @@ class ClientListener(Thread):
     def parse_and_handle_message(self, msg):
         message_type, content = protocol.parse(msg)
         LOG.info("Received response with type " + message_type)
-        if (message_type == GAME_LIST_MSG):
+        if  message_type == GAME_LIST_MSG :
             games = content.split(CONTENT_SEPARATOR)
             self.app.main_view(games)
             LOG.info("Handled response with type " + message_type)
-        elif(message_type == BOARD_STATE_MSG):
+        elif message_type == SUCCESSFUL_JOIN_MSG:
+            self.app.game_started = False
+            LOG.info("Handled response with type " + message_type)
+        elif message_type == START_GAME_MSG:
+            self.app.start_game()
+            LOG.info("Handled response with type " + message_type)
+        elif message_type == BOARD_STATE_MSG:
             digits, types = protocol.separate_board_state_msg_content(content)
             self.app.update_game_view((digits, types), "")
             LOG.info("Handled response with type " + message_type)
-        elif(message_type == SEND_SCORES_MSG):
+        elif message_type == SEND_SCORES_MSG:
             scores = protocol.parse_score_message(content)
             self.app.update_game_view("", scores)
             LOG.info("Handled response with type " + message_type)
-        elif (message_type == SUCCESSFUL_INS_MSG):
+        elif message_type == SUCCESSFUL_INS_MSG:
             LOG.info("Handled response with type " + message_type + ": " + content)
-        elif (message_type == FAILED_INS_MSG):
+        elif message_type == FAILED_INS_MSG:
             LOG.info("Handled response with type " + message_type + ": " + content)
-        elif (message_type == GAME_OVER_VICTORY_MSG):
+        elif message_type == GAME_OVER_VICTORY_MSG:
             self.app.show_end(content)
             LOG.info("Handled response with type " + message_type + ": " + content)
-        elif (message_type == GAME_OVER_LOSS_MSG):
+        elif message_type == GAME_OVER_LOSS_MSG:
             self.app.show_end(content)
             LOG.info("Handled response with type " + message_type + ": " + content)
         else:
-            LOG.info("TODO: Handle response with type " + message_type)
-            # TODO: HANDLE PROBLEMS
+            LOG.info("Unknown message with type " + message_type)
             pass
 
     def shut_down(self):

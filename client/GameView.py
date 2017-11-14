@@ -4,11 +4,11 @@ import tkMessageBox
 
 _WIDTH = 666
 _HEIGHT = 300
-_GAME_HEIGHT = 600
-_GAME_WIDTH = 800
+_GAME_HEIGHT = 500
+_GAME_WIDTH = 700
 
 class GameView:
-    def __init__(self, container, main_ui, digitsTypes, players):
+    def __init__(self, container, main_ui, digitsTypes, players, game_started):
         self.main_ui = main_ui
 
         self.frame_left = Frame(container)
@@ -31,22 +31,13 @@ class GameView:
         self.games_lb.pack()
         self.fill_players(players)
 
-        #games_txt = Label(self.frame_right, text="My score: 16", font=self.scoreFont)
-        #games_txt.pack(pady=20)
+        self.waiting_txt = None
+        if not game_started:
+            self.waiting_txt = Label(self.frame_right, text="Waiting for players")
+            self.waiting_txt.pack(side=TOP)
 
-        games_txt = Label(self.frame_right, text="", height=3)
-        games_txt.pack()
-
-        games_txt = Label(self.frame_right, text="Events")
-        games_txt.pack()
-
-        self.events_lb = Listbox(self.frame_right, bg="gray99", selectbackground="gray99", height=6, width=30)
-        self.events_lb.bind("<<ListboxSelect>>", self.no_selection)
-        self.events_lb.pack()
-        self.fill_events()
-
-        self.enterButton = Button(self.frame_right, text="Exit game", command=self.exit_game)
-        self.enterButton.pack( padx=10, pady=10)
+        self.exitButton = Button(self.frame_right, text="Exit game", command=self.exit_game)
+        self.exitButton.pack( padx=10, pady=10)
 
     def update_board(self, digitsTypes):
         game = SudokuGame(digitsTypes[0], digitsTypes[1])
@@ -63,17 +54,13 @@ class GameView:
             self.games_lb.insert(idx, val)
         self.games_lb.pack()
 
+    def hide_waiting_txt(self):
+        if self.waiting_txt is not None:
+            self.waiting_txt.pack_forget()
+
     def no_selection(self, event):
         w = event.widget
         w.selection_clear(w.curselection())
-
-    def get_players(self):
-        return ["David: 10", "Shade: 15", "Bob 16", "You: 16"]
-
-    def fill_events(self):
-        for idx, val in enumerate(["You inserted 9 correctly: +1 pts", "You made a mistake: -1 pts",
-                                   "David made a mistake: -1 pts"]):
-            self.events_lb.insert(idx, val)
 
     def exit_game(self):
         self.main_ui.exit_game()
