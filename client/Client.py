@@ -41,8 +41,8 @@ class Application():
         self.root.mainloop()
 
         # After exiting from main loop
-        print("Closing connections")
-
+        self.exit_game()
+        self.disconnect()
 
         # Connect to server
 
@@ -141,6 +141,9 @@ class Application():
                 self.existing_game_view.fill_players(scores)
 
     def exit_game(self):
+        LOG.info("Sending exit game message")
+        protocol.send(self.socket, EXIT_GAME_MSG)
+        LOG.info("Client is not expecting response for exit game message")
         self.existing_game_view = None
         self.get_games()
 
