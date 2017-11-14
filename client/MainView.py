@@ -20,7 +20,7 @@ class MainView:
         self.games_lb.pack()
         self.fill_games()
 
-        self.enterButton = Button(self.frame_left, text="Refresh", command=self.refresh_games)
+        self.enterButton = Button(self.frame_left, text="Refresh", command=self.get_games)
         self.enterButton.pack(side=LEFT, padx=10, pady=10)
 
         self.connectButton = Button(self.frame_left, text="Connect", command=self.connect)
@@ -43,32 +43,36 @@ class MainView:
     def hide(self, widget):
         widget.pack_forget()
 
-    def refresh_games(self):
-        self.games_lb.delete(0, END)
-        self.fill_games()
+    def get_games(self):
+        self.main_ui.get_games()
 
     def fill_games(self):
+        self.games_lb.delete(0, END)
+        if self.games == ['']:  # Handle empty list
+            return
         for idx, val in enumerate(self.games):  # Insert all games to the list
-            self.games_lb.insert(idx, val)
+            self.games_lb.insert(idx, "Game " + val)
         self.games_lb.pack()
 
     def connect(self):
         selected_game_idx = self.games_lb.curselection()
         selected_game = self.games_lb.get(selected_game_idx)
+
         if len(selected_game_idx) == 0:
             tkMessageBox.showinfo("Error", "No game selected")
-        elif "TODO" == "Connection failed":
-            tkMessageBox.showinfo("Error", "Connection error")
         else:
             print("Connecting")
+            selected_game = str.split(selected_game)[1]
+            self.main_ui.game_open = True
             self.main_ui.join_game(selected_game)
 
     def create_new_game(self):
         player_count_idx = self.players_lb.curselection()
-        player_count = self.players_lb.get(player_count_idx)
         if len(player_count_idx) == 0:
             tkMessageBox.showinfo("Error", "Select the amount of players")
             return
         else:
+            player_count = self.players_lb.get(player_count_idx)
+            self.main_ui.game_open = True
             self.main_ui.create_game(player_count)
 
