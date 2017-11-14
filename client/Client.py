@@ -142,7 +142,7 @@ class Application():
 
     def exit_game(self):
         LOG.info("Sending exit game message")
-        protocol.send(self.socket, EXIT_GAME_MSG)
+        protocol.send(self.socket, EXIT_GAME_MSG, "")
         LOG.info("Client is not expecting response for exit game message")
         self.existing_game_view = None
         self.get_games()

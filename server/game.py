@@ -31,6 +31,11 @@ class Game:
         self.connected_clients.pop(client_id)
         self.scores.pop(client_id)
         LOG.debug("Removed client with id " + str(client_id) + " from game")
+        if len(self.connected_clients) == 1:
+            LOG.debug("Only one player remaining. That player wins.")
+            client_socket = self.connected_clients.values()[0].client_socket
+            protocol.send(client_socket, GAME_OVER_VICTORY_MSG, "You win!")
+            self.terminate_game()
 
     def get_connected_clients(self):
         """Get the dictionary of connected clients in the game."""

@@ -4,9 +4,14 @@ from constants import *
 
 
 """
-Format of different messages
-Messages never end with a separator
-() are used to group together recurring parts here for clarity. They are NOT part of the actual messages.
+Format of messages
+
+General remarks:
+1) All messages start with a message type identifier, which is one character long and is denoted by a fully capitalized name.
+2) () are used to group together recurring parts here for clarity. They are NOT part of the actual messages.
+3) Messages never end with a separator.
+
+Types of messages:
 
 Generic message
 GENERIC_MSG + SEPARATOR + some_string

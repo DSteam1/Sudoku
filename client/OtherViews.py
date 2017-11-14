@@ -1,7 +1,9 @@
 from SudokuBoard import *
 from Tkinter import Tk, Canvas, Frame, Button, BOTH, TOP, BOTTOM, LEFT, RIGHT, END,  Label, CENTER, Listbox, Entry
 import tkMessageBox
+import os, sys, re
 
+USERNAMES_FILE = "usernames.txt"
 
 class ServerAddressView:
 
@@ -79,24 +81,60 @@ class NicknameView:
 
     def fill_nickname(self, evt):
         w = evt.widget
+        if w.size() == 0:
+            return
         idx = int(w.curselection()[0])
         self.entry.delete(0, END)
         self.entry.insert(0, w.get(idx))
 
     def validate_nickname(self, nickname):
-        # TODO: Username validation, spaces are not allowed!!
+        validation = re.findall("^[a-zA-Z0-9]*$", nickname)
         if len(nickname) == 0:
-            tkMessageBox.showinfo("Error", "Too short nickname")
+            tkMessageBox.showinfo("Error", "Nickname must be at least 1 character long")
             return False
         elif len(nickname) > 8:
-            tkMessageBox.showinfo("Error", "Too long nickname")
+            tkMessageBox.showinfo("Error", "Nickname must be 8 characters or shorter")
+            return False
+        elif len(validation) == 0 or (len(validation) > 0 and validation[0] != nickname):
+            tkMessageBox.showinfo("Error", "Only alphanumeric characters allowed")
             return False
         return True
 
+
+def get_dir():
+    return os.path.dirname(os.path.realpath(sys.argv[0]))
+
+
 def read_usernames():
-    # TODO: Username reading from file
-    return ["evelknievel", "user1", "dima"]
+    try:
+        file_path = get_dir() + '/' + USERNAMES_FILE
+        if not os.path.exists(file_path):
+            return []  # No such file
+        un = []
+        with open(file_path, 'r') as f:
+            for i in range(10):  # Read max 10 lines
+                line = str.strip(f.readline())
+                if line == "":
+                    break
+                un.append(line[:8])  # Append 8 first characters of a line
+            f.close()
+        return un
+    except Exception as ex:
+        print("Error reading from file:", ex)
+        return []
+
 
 def save_username(username):
-    # TODO: Appending username to file if not added
-    pass
+    try:
+        usernames = read_usernames()  # Read usernames currently in file
+        if username in usernames:
+            usernames.remove(username)  # Remove current username
+        usernames.insert(0, username)  # Append to start
+
+        file_path = get_dir() + '/' + USERNAMES_FILE
+        with open(file_path, 'w') as f:
+            for un in usernames:  # Write usernames to file
+                f.write(un[:8] + "\n")
+            f.close()
+    except Exception as ex:
+        print("Error writing to file:", ex)
