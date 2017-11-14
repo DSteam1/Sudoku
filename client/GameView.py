@@ -60,7 +60,9 @@ class GameView:
 
     def no_selection(self, event):
         w = event.widget
-        w.selection_clear(w.curselection())
+        cur = w.curselection()
+        if len(cur) > 0:
+            w.selection_clear(cur)
 
     def exit_game(self):
         self.main_ui.exit_game()
